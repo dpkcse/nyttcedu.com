@@ -1,0 +1,41 @@
+<div class="row">
+	<div class="col-md-12">
+		<div class="message-con">
+		<div class="message-show">
+			<!-- MESSAGE SHOW HERE -->
+			<!-- Here 2 types of error/message showing
+			1. is following render time error/message
+			2. is Jquery ajax call append type error/message -->
+			
+			<% if(success_msg != ''){ %>
+					<div class="alert alert-success alert-dismissable">
+							<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>
+							<%= success_msg %>
+					</div>
+			<% } %>
+			<% if(error_msg != ''){ %>
+				<div class="alert alert-danger alert-dismissable">
+						<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>
+						<%= error_msg %>
+				</div>
+			<% } %>
+
+			<% if(error.length > 0 ){ _.each(error,function(v,k){ %>
+					<div class="alert alert-danger alert-dismissable">
+							<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>
+							<div><%= v %></div>
+					</div>
+			<% }); } %>
+			
+			<% if(typeof errors != 'undefined'){ %>
+					<% errors.forEach(function(v) { %>
+							<div class="alert alert-warning alert-dismissable">
+									<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>
+									<%= v.msg %>
+							</div>
+					<% }); %>
+			<% } %>
+		</div>
+		</div>
+	</div>
+</div>

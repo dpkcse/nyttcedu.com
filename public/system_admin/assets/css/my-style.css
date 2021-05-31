@@ -1,0 +1,141 @@
+.login-logo {
+  border: 1px solid #556ee6;
+}
+.img-dash {
+  max-width: 30%;
+  height: auto;
+}
+.navbar-brand-box {
+  background-color: #ddd !important;
+}
+.namecom {
+  font-size: 15px;
+  font-weight: bold;
+}
+.user_name {
+  text-transform: capitalize;
+}
+.courseBtn {
+  width: 110px;
+  margin-right: 15px;
+}
+.courseAsignBtn {
+  width: 130px;
+}
+.certificateOldBtn {
+  width: 140px;
+  margin-right: 15px;
+}
+.updateCertOldBtn {
+  width: 155px;
+  margin-right: 15px;
+}
+.noti-icon .badge {
+  top: 8px;
+  right: -3px;
+  border-radius: 7px 0px 0px 7px;
+}
+.createUsrBtn {
+  width: 135px;  
+}
+.createUsrBtn:first-child{
+  margin-right: 15px;
+}
+/* @media (min-width: 576px) {
+  .d-sm-block {
+      display: block!important;
+  }
+} */
+
+.cert-verify {
+  /* border: 1px solid #F55; */
+  border: 1px solid #6f42c1;
+  border-radius: 5px;
+  margin: 35px 0px;
+  position: relative;
+}
+.cert-legend {
+  display: inline;
+  font-size: 15px;
+  /* background-color: #F55; */
+  background-color: #6f42c1;
+  color: #FFF;
+  /* border: 1px solid #F55; */
+  border-radius: 3px;
+  padding: 5px 20px;
+  position: absolute;
+  left: 15px;
+  top: -14px;
+  text-transform: capitalize;
+}
+.cert-body {
+  padding: 30px 15px 20px;
+}
+.cert-view-table {
+  width: 100%;
+}
+.cert-view-table tr {
+  border-bottom: 1px solid #b7b7b7 !important;
+}
+.date-th {
+  width: 85px;
+}
+/* .pr-th {
+  width: 55px;
+}
+.result-th {
+  width: 45px;
+}
+ */
+.action-th {
+  width: 65px;
+}
+.card-title-desc {
+  margin: 0px;
+}
+.message-con {
+  position: relative;
+  width: 100%;
+  z-index: 999;
+}
+.message-show {
+  position: absolute;
+  width: 100%;
+}
+.mainGreen {
+  border: 1px solid #2ca579;
+}
+.conGreen {
+  background-color: #2ca579;
+}
+#conGreenLabel {
+  color: #FFF !important;
+}
+.confirmGreenModal .modal-header .close {
+  /* color: #FFF; */
+  /* background-color: red; */
+}
+.mainRed {
+  border: 1px solid #f55;
+}
+.conRed {
+  background-color: #f55;
+}
+#conRedLabel {
+  color: #FFF !important;
+}
+.changePassBtn {
+  width: 150px;  
+}
+.changePassBtn:first-child{
+  margin-right: 15px;
+}
+#image_loader_send_mail {
+  display: none;
+}
+#loader_change_pass {
+  display: none;
+}
+.mendatory {
+  color: #F55;
+}

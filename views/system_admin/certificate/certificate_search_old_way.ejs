@@ -1,0 +1,284 @@
+<%- include('../system_layouts/s_head') %>
+<style>
+  .message-show {
+    position: fixed;
+    width: 500px;
+    right: 45px;
+  }
+</style>
+<div class="container-fluid">
+	<%- include('../system_layouts/s_message') %>
+  <%- include('../system_layouts/s_breadcumb') %>
+  <div class="row">
+    <div class="col-xl-12">
+      <div class="card">
+				<div class="card-body">
+					<h4 class="card-title">Search - Certifate Info || As old way</h4>
+					<% if(sucMsg != ''){ %>
+						<div class="alert alert-success alert-dismissable">
+							<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>
+							<%= sucMsg %>
+						</div>
+					<% } %>
+					<% if(errMsg != ''){ %>
+						<div class="alert alert-danger alert-dismissable">
+							<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>
+							<%= errMsg %>
+						</div>
+					<% } %>
+					<!-- <p class="card-title-desc">Provide valuable, actionable feedback to your users with HTML5 form validation–available in all our supported browsers.</p> -->
+					<form method="post" action="/certificate/add-certificate-old-way" autocomplete="off">
+						<div class="row">
+							<div class="col-md-4">
+								<div class="form-group">
+									<label for="student_name">Student's Name</label>
+									<input type="text" name="student_name" class="form-control" id="student_name" placeholder="Students's Name" value="" autocomplete="off">
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="form-group">
+									<label for="name">Serial No</label>
+									<input type="text" name="serial" class="form-control" id="serial" placeholder="Serial No" value="" onkeypress='return event.charCode >= 48 && event.charCode <= 57'  autocomplete="off">
+								</div>
+							</div>
+						</div>
+						<br>
+						<div class="text-center">
+							<button class="btn btn-primary certificateOldBtn" type="button" name="saveUpdate" id="certSearchBtn">Search Info</button>
+							<button class="btn btn-danger certificateOldBtn" type="reset" id="resetBtn">Reset</button>
+						</div>
+					</form>
+					<!-- <form action="/certificate" method="post">
+						<button class="btn btn-primary certificateOldBtn" type="submit" name="name" id="courseCertificateBtn" value="ReSave">ReSave</button>
+					</form> -->
+				</div>
+      </div>
+    </div>
+	</div>
+	
+	<div class="row">
+		<div class="col-12">
+			<div class="card">
+				<div class="card-body">
+					<h4 class="card-title">Search Results</h4>
+					<p class="card-title-desc">
+						In here, showing found certificate Information lists.
+					</p>	
+					<table id="datatable-sc-result" class="table table-striped table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+						<thead>
+							<tr>
+								<th>Sl</th>
+								<th>Serial</th>
+								<th>Student Name</th>
+								<th>Fathers Name</th>
+								<th>Mothers Name</th>
+								<th>Course Title</th>
+								<th>Session</th>
+								<th>Passing Year</th>
+								<th>Result</th>
+								<th>Is Approved</th>
+								<th>Is Updated</th>
+								<th>Is Print</th>
+								<th>Is Received</th>
+								<th>Received Date</th>
+								<th>Action</th>
+							</tr>
+						</thead>
+						<tbody>
+							
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+
+</div>
+
+<%- include('../system_layouts/s_foot') %>
+<script>
+	$('#datatable-sc-result').DataTable();
+	$(document).on('click', '#serial', function() {
+		$(this).prop( "readonly", false );
+		$('#student_name').val('').prop( "readonly", true );		
+	});
+	$(document).on('click', '#student_name', function() {
+		$(this).prop( "readonly", false );
+		$('#serial').val('').prop( "readonly", true );		
+	});
+	$(document).on('keypress','#serial', function(e) {
+    if(e.which == 13) {
+        $("#certSearchBtn").trigger('click');
+    }
+	});
+	$(document).on('keypress','#student_name', function(e) {
+    if(e.which == 13) {
+        $("#certSearchBtn").trigger('click');
+    }
+	});
+	
+	var msg_no = 0;
+	$(document).on('click', '#certSearchBtn', function(event) {
+    msg_no++;
+    let s_name = $('#student_name').val();
+    let serial_no = $('#serial').val();
+    if(s_name || serial_no) {
+      $.ajax({
+				url: "/certificate/search-old-way",
+				cache: false,
+				type: "POST",
+				data: {
+					s_name 		: s_name,
+					serial_no : serial_no
+				},
+				success: function(res, status, xhr) {
+					var i = 0;
+					var tr = '';
+					if(res.status) {
+						$('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-success alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.sucMsg +
+              '</div>'
+            ); 
+            hide_msg('#msg_'+msg_no);
+						
+            $.each(res.result, function(k, v) {
+							// console.log(v)
+              // $('#datatable-sc-result > tbody').append(
+								tr += '<tr>' +
+									'<td>'+(++i)+'</td>'+
+									'<td>'+ v.serial_no +'</td>'+
+									'<td>'+ v.s_name +'</td>'+
+									'<td>'+ v.f_name +'</td>'+
+									'<td>'+ v.m_name +'</td>'+
+									'<td>'+ v.course_title +'</td>'+
+									'<td>'+ v.session +'</td>'+
+									'<td>'+ v.passing_year +'</td>'+
+									'<td>'+ v.result +'</td>'+
+									'<td>'+ v.is_approved +'</td>'+
+									'<td>'+ v.is_insert_or_update +'</td>'+
+									'<td>'+ v.is_print +'</td>'+
+									'<td>'+ v.is_received +'</td>'+
+									'<td>'+ v.received_date +'</td>'+
+									'<td>'+
+										// '<form method="post" action="#">'+
+										// 	'<input type="hidden" name="certificate_id" value="'+v.id+'" />'+
+										// 	'<input class="btn btn-success btn-sm" type="submit" value="Edit Request" />'+
+										// '</form>'+
+										'<input type="button" class="btn btn-success btn-sm edit_cert_req" id="find_cert_'+v.id+'" data-id="'+v.id+'" value="Edit Request" '+ v.update_btn_is_enable+' title="' + (v.update_request >= 0? 'Already have a edit request!':'') + '"/>'+
+										'<button class="btn btn-primary btn-sm ml-1" data-id="'+v.id+'">Certificate View</button>'+
+									'</td>'+									
+								'</tr>';
+							// );
+            });
+						
+          //   $('#notificaion_counter').text((parseInt($('#notificaion_counter').text()) - 1));
+					} else {
+						$('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-danger alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.errMsg +
+              '</div>'
+            );
+            hide_msg('#msg_'+msg_no);
+					}
+					$('#datatable-sc-result').DataTable().destroy();
+					$('#datatable-sc-result tbody').empty().append(tr);
+					$('#datatable-sc-result').DataTable().draw();
+				},
+				error: function (xhr, status, error) {
+					console.log(xhr);
+					console.log(status);
+					console.log(error);
+				}
+			});
+    } else {
+			$('.message-show').append(
+				'<div id="msg_'+msg_no+'" class="alert alert-danger alert-dismissable">' +
+					'<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+						'Provide Student Name or Serial No' +
+				'</div>'
+			); 
+			hide_msg('#msg_'+msg_no);
+		}
+  });
+
+
+	$(document).on('click', '#resetBtn', function(event) {
+		$('#datatable-sc-result').DataTable().destroy();
+		$('#datatable-sc-result tbody').empty();
+		$('#datatable-sc-result').DataTable().draw();
+	});
+
+
+	$(document).on('click', '.edit_cert_req', function(e) {
+		let id = $(this).attr('data-id').trim();
+		if(id) {
+      $('.confirmGreenModal #conGreenLabel').text('Certificate Update Request !');
+      $('.confirmGreenModal #conGreenMsg').text('Are you sure you want to send a update request for this certificate information?');
+      $('.confirmGreenModal .modal-footer #send_update_certificate_req').remove();
+      $('.confirmGreenModal .modal-footer').append('<button type="button" id="send_update_certificate_req" class="btn btn-success" data-id="' + id + '">Yes</button>');
+      $('.confirmGreenModal').modal();
+    }		
+	});
+
+
+  $(document).on('click', '#send_update_certificate_req', function(event) {
+    msg_no++;
+		let id = $(this).attr('data-id').trim();
+    if(id) {
+      $.ajax({
+				url: "/certificate/edit-request",
+				cache: false,
+				type: "POST",
+				data: {
+					id 		: id,
+				},
+				success: function(res, status, xhr) {
+          // console.log(res);
+					if(res.status) {
+						$('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-success alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.sucMsg +
+              '</div>'
+            ); 
+            hide_msg('#msg_'+msg_no);
+						let is_exit_counter = $("#page-header-notifications-dropdown").find("#notificaion_counter").length;
+						// console.log(is_exit_counter);
+						let data_user_type = $("#page-header-notifications-dropdown").attr('data-user-type');
+							// console.log(data_user_type)
+						if(data_user_type == 1 || data_user_type == 2) {
+							if(is_exit_counter == 0) {
+								$("#page-header-notifications-dropdown").find("i").after(
+									'<span class="badge badge-danger badge-pill" id="notificaion_counter">'+                
+									'1'+
+									'</span>'
+								);
+							} else {
+								$('#notificaion_counter').text((parseInt($('#notificaion_counter').text()) + 1));
+							}
+						}
+						$( "#datatable-sc-result" ).find("tr.child ul").find('li span #find_cert_'+id).prop("disabled", true)
+					} else {
+						$('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-danger alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.errMsg +
+              '</div>'
+            );
+            hide_msg('#msg_'+msg_no);
+					}
+					$('.confirmGreenModal').modal('hide');					
+				},
+				error: function (xhr, status, error) {
+					console.log(xhr);
+					console.log(status);
+					console.log(error);
+				}
+			});
+    }
+  });
+</script>

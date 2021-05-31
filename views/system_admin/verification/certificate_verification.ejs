@@ -1,0 +1,199 @@
+<%- include('../system_layouts/s_head') %>
+<style>
+  .message-show {
+    position: fixed;
+    width: 500px;
+    right: 45px;
+  }
+</style>
+<div class="container-fluid">  
+  <%- include('../system_layouts/s_message') %>
+  <%- include('../system_layouts/s_breadcumb') %>
+  <div class="row">
+    <div class="col-xl-12">
+      <div class="card">
+          <div class="card-body">
+              <h4 class="card-title">Verify Certificates</h4>
+              <p class="card-title-desc">You can verify or delete entry certificates from here. Only After verify the certificates info is visible of search result.</p>
+              
+              <div class="row">
+                <div class="col-md-12">
+                  <% if(Object.keys(verifyCertList).length > 0) { %>
+                    <% _.each(verifyCertList, (v, k) => { %>
+                      <div class="cert-verify">
+                        <div class="cert-legend">Certificate Entry By : <%= v.created_by %></div>
+                        <div class="cert-body">
+                          <div class="table-responsive">
+                            <table class="cert-view-table">
+                              <tr>
+                                <th class="date-th">Date</th>
+                                <th>Serial</th>
+                                <th>Name</th>
+                                <th>Father</th>
+                                <th>Mother</th>
+                                <th>Session</th>
+                                <th>Course</th>
+                                <th class="pr-th">P. Year</th>
+                                <th class="result-th">Result</th>
+                                <th class="action-th">Action</th>
+                              </tr>
+                              <% _.each(v.data, (va, ka) => { %>
+                                <tr>
+                                  <td><%= va.created_at %></td>
+                                  <td><%= va.serial_no %></td>
+                                  <td><%= va.s_name %></td>
+                                  <td><%= va.f_name %></td>
+                                  <td><%= va.m_name %></td>
+                                  <td><%= va.session %></td>
+                                  <td><%= va.course_title %></td>
+                                  <td><%= va.passing_year %></td>
+                                  <td><%= va.result %></td>
+                                  <td>
+                                    <!-- <button class="btn btn-success btn-sm" type="button" id="verify_certificate_btn" data-toggle="modal" data-target=".confirmGreen" data-id="<%= va.id %>"> -->
+                                    <button class="btn btn-success btn-sm verify_certificate_btn" type="button" id="" data-id="<%= va.id %>">
+                                      <i class="bx bx-check"></i>
+                                      <!-- <i class="bx bx-calendar-check"></i> -->
+                                    </button>
+                                    <button class="btn btn-danger btn-sm delete_certificate_btn" type="button" id="" data-id="<%= va.id %>">
+                                      <i class="bx bxs-trash-alt"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              <% }); %>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    <% }); %>
+                  <% } else { %>
+                    <h5 class="text-danger text-center mt-5">Certificate verification is not available now.</h5>
+                  <% } %>
+                </div>
+              </div>
+          </div>
+      </div>
+    </div>
+	</div>
+
+</div>
+<%- include('../system_layouts/s_foot') %>
+<script>  
+  $(document).on('click', '.verify_certificate_btn', function(event) {    
+    let id = $(this).attr('data-id');
+    if(id) {
+      $('.confirmGreenModal #conGreenLabel').text('Confirm Verification');
+      $('.confirmGreenModal #conGreenMsg').text('Are you sure you want to verify this certificate information?');
+      $('.confirmGreenModal .modal-footer #confirm_verify_certificate').remove();
+      $('.confirmGreenModal .modal-footer').append('<button type="button" id="confirm_verify_certificate" class="btn btn-success" data-id="' + id + '">Yes</button>');
+      $('.confirmGreenModal').modal();
+    }
+  });
+  $(document).on('click', '.delete_certificate_btn', function(event) {    
+    let id = $(this).attr('data-id');
+    if(id) {
+      $('.confirmRedModal #conRedLabel').text('Delete');
+      $('.confirmRedModal #conRedMsg').text('Are you sure you want to delete this certificate information?');
+      $('.confirmRedModal .modal-footer #confirm_delete_certificate').remove();
+      $('.confirmRedModal .modal-footer').append('<button type="button" id="confirm_delete_certificate" class="btn btn-success" data-id="' + id + '">Yes</button>');
+      $('.confirmRedModal').modal();
+    }
+  });
+  
+  var msg_no = 0; //msg control code
+  $(document).on('click', '#confirm_verify_certificate', function(event) {
+    msg_no++;
+    let id = $(this).attr('data-id');
+    if(id) {
+      $.ajax({
+				url: "/verification/verify-certificate",
+				cache: false,
+				type: "POST",
+				data: {id : id},
+				success: function(res, status, xhr) {
+          // console.log(res);
+					if(res.status) {
+						$('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-success alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.sucMsg +
+              '</div>'
+            ); 
+            hide_msg('#msg_'+msg_no);
+            $('.verify_certificate_btn').each(function(k, v) {
+              if($(v).attr('data-id') == id) {
+                v.closest('tr').remove();
+              }
+            });
+
+            $('#notificaion_counter').text((parseInt($('#notificaion_counter').text()) - 1));
+					} else {
+						$('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-danger alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.errMsg +
+              '</div>'
+            );
+            hide_msg('#msg_'+msg_no);
+					}
+          $('.confirmGreenModal').modal('hide');
+				},
+				error: function (xhr, status, error) {
+					console.log(xhr);
+					console.log(status);
+					console.log(error);
+				}
+			});
+    }
+  });
+  
+  $(document).on('click', '#confirm_delete_certificate', function(event) {
+    msg_no++;
+    let id = $(this).attr('data-id');
+    if(id) {
+      $.ajax({
+				url: "/verification/delete-certificate",
+				cache: false,
+				type: "POST",
+				data: {id : id},
+				success: function(res, status, xhr) {
+          // console.log(res);
+					if(res.status) {
+						$('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-danger alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.sucMsg +
+              '</div>'
+            ); 
+            hide_msg('#msg_'+msg_no);
+            $('.verify_certificate_btn').each(function(k, v) {
+              if($(v).attr('data-id') == id) {
+                v.closest('tr').remove();
+              }
+            });
+
+            $('#notificaion_counter').text((parseInt($('#notificaion_counter').text()) - 1));
+					} else {
+						$('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-danger alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.errMsg +
+              '</div>'
+            );
+            hide_msg('#msg_'+msg_no);
+					}
+          $('.confirmRedModal').modal('hide');
+				},
+				error: function (xhr, status, error) {
+					console.log(xhr);
+					console.log(status);
+					console.log(error);
+				}
+			});
+    }
+  });
+  
+  
+  
+  
+  
+</script>

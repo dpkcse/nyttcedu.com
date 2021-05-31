@@ -1,0 +1,109 @@
+<%- include('layouts/head') %>
+<%- include('layouts/top_navbar') %>
+
+<div class="container my-5">
+	<div class="row">
+		<div class="col-md-12">
+			<div class="course-con">
+				<div class="course-type">Short Courses</div>
+					<% _.each(shortDeptWiseCourseList, (v_courses, k_dept_name) => { %>							
+							<div class="department-con1">
+								<div class="department-name1">
+									<span class="dept-head-left"><%= k_dept_name %> Department</span>
+									<span class="dept-head-right">Short Courses</span>
+								</div>
+								<div class="">
+									<br>
+									<table class="table table-hover">
+										<thead class="thead-color1">
+											<tr>
+												<th>Course Title</th>
+												<th>Duration</th>
+											</tr>
+										</thead>
+											<tbody>
+												<% _.each(v_courses, (v, k) => { %>
+													<tr>
+														<td><%= v.course_title %></td>
+														<td><%= v.course_duration_text %></td>
+													</tr>
+												<% }); %>
+										</tbody>
+									</table>
+								</div>
+							</div>
+				<% }); %>
+			</div>
+		</div>
+
+		<div class="col-md-12 mt-5">
+			<div class="course-con">
+				<div class="course-type">Long Courses</div>
+					<% _.each(longDeptWiseCourseList, (v_courses, k_dept_name) => { %>							
+							<div class="department-con1">
+								<div class="department-name1">
+									<span class="dept-head-left"><%= k_dept_name %> Department</span>
+									<span class="dept-head-right">Long Courses</span>
+								</div>
+								<div class="">
+									<br>
+									<table class="table table-hover">
+										<thead class="thead-color1">
+											<tr>
+												<th>Course Title</th>
+												<th>Duration</th>
+											</tr>
+										</thead>
+											<tbody>
+												<% _.each(v_courses, (v, k) => { %>
+													<tr>
+														<td><%= v.course_title %></td>
+														<td><%= v.course_duration_text %></td>
+													</tr>
+												<% }); %>
+										</tbody>
+									</table>
+								</div>
+							</div>
+				<% }); %>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+
+<%- include('layouts/footer') %>
+<%- include('layouts/sign_in_up_modal') %>
+<%- include('layouts/foot') %>
+
+
+
+<!-- <div class="department-con1">
+	<div class="department-name1">Computer Department</div>
+	<div class="">
+		<br>
+		<table class="table table-hover">
+			<thead class="thead-color1">
+				<tr>
+					<th>Course Title</th>
+					<th>Duration</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>Advance Office Application</td>
+					<td >4 Months</td>
+				</tr>
+				<tr>
+					<td>Advance Office Application</td>
+					<td>4 Months</td>
+				</tr>
+				<tr>
+					<td>Advance Office Application</td>
+					<td>4 Months</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div> -->

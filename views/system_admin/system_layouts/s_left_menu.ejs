@@ -1,0 +1,145 @@
+<div class="vertical-menu">
+  <div data-simplebar class="h-100">
+    <div id="sidebar-menu">
+      <ul class="metismenu list-unstyled" id="side-menu">
+        <li class="menu-title">Menu</li>
+        <li>
+          <a href="/dashboard" class="waves-effect">
+						<i class="bx bxs-dashboard"></i>
+            <span>Dashboards</span>
+          </a>
+				</li>
+        <% if(user_info.user_type == 1 || user_info.user_type == 2 ) { %>
+        <li class="menu-title">Verification & Mail</li>        
+        <li>
+          <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <i class="bx bxs-check-shield"></i>
+            <span>Verify Request</span>
+          </a>
+          <ul class="sub-menu" aria-expanded="false">
+            <li><a href="/verification/certificate">Certificate Verification</a></li>
+            <li><a href="/verification/cert-edit-request">Certificate Edit Request</a></li>
+          </ul>
+        </li>
+        <li>
+          <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <i class="bx bx-envelope"></i>
+            <span>Mail/Inbox</span>
+          </a>
+          <ul class="sub-menu" aria-expanded="false">
+            <li><a href="/message">Message</a></li>
+          </ul>
+        </li>
+        <% } %>
+        <li class="menu-title">Students Section</li>
+        <!-- <li>
+          <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <i class="bx bx-store"></i>
+            <span>Admission</span>
+          </a>
+          <ul class="sub-menu" aria-expanded="false">
+            <li><a href="/add-system/add-student">Add Student</a></li>
+            <li><a href="/add-system/asign-course">Asign Course</a></li>
+            <li><a href="#">Search</a></li>
+            <li><a href="#">Update</a></li>
+          </ul>
+        </li> -->
+        <!-- <li>
+          <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <i class="bx bx-briefcase-alt-2"></i>
+            <span>Course Fee</span>
+          </a>
+          <ul class="sub-menu" aria-expanded="false">
+            <li><a href="/receive-course-fee">Receive Course Fee</a></li>
+          </ul>
+        </li> -->
+        <li>
+          <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <i class="bx bx-layout"></i>
+            <span>Certificates</span>
+          </a>
+          <ul class="sub-menu" aria-expanded="false">
+            <li><a href="/certificate/add-certificate-old-way">Add New (Old Way)</a></li>
+            <li><a href="/certificate/search-old-way">Search (Old Way)</a></li>
+            <!-- <li><a href="#">Registration</a></li> -->
+          </ul>
+        </li>
+        <% if(user_info.user_type == 1 || user_info.user_type == 2 ) { %>
+        <li>
+          <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <i class="bx bx-calendar"></i>
+            <span>Courses</span>
+          </a>
+          <ul class="sub-menu" aria-expanded="false">
+            <li><a href="/course">Add Course</a></li>
+            <!-- <li><a href="#">Add Department</a></li> -->
+            <!-- <li><a href="#">Add Course Duration</a></li> -->
+            <!-- <li><a href="/department">Add Department</a></li>
+            <li><a href="/course-duration">Add Course Duration</a></li> -->
+          </ul>
+        </li>
+        <% } %>
+        <% if(user_info.user_type == 1 || user_info.user_type == 2 ) { %>
+        <li class="menu-title">Office Section</li>
+        <!-- <li>
+          <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <i class="bx bx-receipt"></i>
+            <span>Office Voucher</span>
+          </a>
+          <ul class="sub-menu" aria-expanded="false">
+            <li><a href="#">Save Vaucher</a></li>
+          </ul>
+        </li> -->
+        <!-- <li>
+          <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <i class="bx bx-task"></i>
+            <span>Salary Pay</span>
+          </a>
+          <ul class="sub-menu" aria-expanded="false">
+            <li><a href="#">Empoyee Salary Pay</a></li>
+          </ul>
+        </li> -->
+        
+        <li>
+          <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <i class="bx bx-briefcase-alt-2"></i>
+            <span>Employee</span>
+          </a>
+          <ul class="sub-menu" aria-expanded="false">
+            
+            <li><a href="#">Add Employee</a></li>
+            <li><a href="#">Add Designation</a></li>
+          </ul>
+        </li>
+        <% } %>
+
+        <% if(user_info.user_type == 1 || user_info.user_type == 2 ) { %>
+          <li class="menu-title">User and Other</li>
+          <li>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+              <i class="bx bx-user-circle"></i>
+              <span>User</span>
+            </a>
+            <ul class="sub-menu" aria-expanded="false">
+              <li><a href="/admin-user">Create System User </a></li>
+              <li><a href="/admin-user/change-password">Change My Password</a></li>
+              <!-- <li><a href="#">Search User</a></li> -->
+              <!-- <li><a href="#">Update User Info</a></li> -->
+            </ul>
+          </li>
+        <% } %>
+        
+
+        <!-- <li>
+          <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <i class="bx bx-file"></i>
+            <span>Utility</span>
+          </a>
+          <ul class="sub-menu" aria-expanded="false">
+            <li><a href="#">Starter Page</a></li>
+          </ul>
+        </li> -->
+      </ul>
+    </div>
+  </div>
+</div>

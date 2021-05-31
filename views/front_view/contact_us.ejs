@@ -1,0 +1,192 @@
+<%- include('layouts/head') %>
+<%- include('layouts/top_navbar') %>
+
+<!-- <section class="page-title">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 col-md-12">
+                
+                <div class="breadcrumbs-wrap">
+                    <h1 class="breadcrumb-title">Get in Touch</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Home</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Contact Us</li>
+                        </ol>
+                    </nav>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</section> -->
+<!-- <section class="bg-light bg-blueme"> -->
+<section id="contact" class="contact">
+	<div class="container" data-aos="fade-up">
+
+		<div class="section-title">
+			<h2>Contact</h2>
+			<p>Magnam dolores commodi suscipit. Necessitatibus eius consequatur ex aliquid fuga eum quidem. Sit sint consectetur velit. Quisquam quos quisquam cupiditate. Et nemo qui impedit suscipit alias ea. Quia fugiat sit in iste officiis commodi quidem hic quas.</p>
+		</div>
+
+		<div class="row">
+
+			<div class="col-lg-5 d-flex align-items-stretch">
+				<div class="info">
+					<div class="address">
+						<i class="fas fa-map-marker-alt"></i>
+						<h4>Location:</h4>
+						<p>House# 279/4-A, Road# 4, Tilpapara, Khilgaon, Dhaka-1219. </p>
+					</div>
+
+					<div class="email">
+						<i class="fa fa-envelope"></i>
+						<h4>Email:</h4>
+						<p>nyttc97@gmail.com</p>
+					</div>
+
+					<div class="phone">
+						<i class="fa fa-phone"></i>
+						<h4>Call:</h4>
+						<p>+8801912-148548</p>
+					</div>
+					<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d456.50835680681797!2d90.42719517703105!3d23.74499526098567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b96573cca7cb%3A0xfecada1748910590!2sNYTTC!5e0!3m2!1sen!2sbd!4v1622439882544!5m2!1sen!2sbd" frameborder="0" style="border:1px solid #ccc; width: 100%; height: 290px;" allowfullscreen="" loading="lazy"></iframe>
+				</div>
+
+			</div>
+
+			<div class="col-lg-7 mt-5 mt-lg-0 d-flex align-items-stretch">				
+				<form action="/contact" method="post" role="form" class="php-email-form" autocomplete="off">
+					<%- include('layouts/front_message') %>	
+					<div class="row">
+						<div class="form-group col-md-6">
+							<label for="name">Your Name</label>
+							<input type="text" name="name" class="form-control contactInp" id="name" required placeholder="Your Name..." maxlength="40" autocomplete="off">
+							<span id="nameErr" class="text-danger"></span>
+						</div>
+						<div class="form-group col-md-6">
+							<label for="mobile">Your Mobile</label>
+							<input type="text" class="form-control contactInp" name="mobile" id="mobile" required placeholder="Your Mobile..." autocomplete="off" onkeypress="return event.charCode >= 48 && event.charCode <= 57" onpaste="return false" maxlength="11">
+							<span id="mobileErr" class="text-danger"></span>
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="form-group col-md-6">
+							<label for="subject">Subject</label>
+							<input type="text" class="form-control contactInp" name="subject" id="subject" required placeholder="Subject..." autocomplete="off" maxlength="50">
+							<span id="subjectErr" class="text-danger"></span>
+						</div>
+						<div class="form-group col-md-6">
+							<label for="email">Your Email</label>
+							<input type="email" class="form-control contactInp" name="email" id="email" placeholder="Your Email..." autocomplete="off" maxlength="50">
+							<span id="emailErr" class="text-danger"></span>
+						</div>
+					</div>
+
+					
+					<div class="form-group">
+						<label for="name">Message</label>
+						<textarea class="form-control contactInp" name="message" id="message" rows="10" required placeholder="Message..." maxlength="500"></textarea>
+						<span id="msgErr" class="text-danger"></span>
+					</div>
+					<div class="my-3">
+						<div class="loading">Message Sending...</div>
+						<div class="error-message"></div>
+						<div class="sent-message">Your message has been sent. Thank you!</div>
+					</div>
+					<div class="text-center"><button type="submit" onclick="return checkValidation()">Send Message</button></div>
+				</form>
+			</div>
+
+		</div>
+
+	</div>
+</section>
+
+
+<div class="clearfix"></div>
+
+<%- include('layouts/footer') %>
+<%- include('layouts/sign_in_up_modal') %>
+<%- include('layouts/foot') %>
+
+<script>
+	function checkValidation() {
+		let nameValid = false;
+		let mobileValid = false;
+		let subjectValid = false;
+		let emailValid = true;
+		let messageValid = false;
+
+		let name = $('#name').val().trim();
+		let mobile = $('#mobile').val().trim();
+		let subject = $('#subject').val().trim();
+		let email = $('#email').val().trim();
+		let message = $('#message').val().trim();
+
+		if(!name) {
+			$('#nameErr').text('Required!');
+			nameValid = false;
+		} else if(name.length > 40) {
+			$('#nameErr').text('Name within 40 character!');
+			nameValid = false;
+		} else {
+			$('#nameErr').text('');
+			nameValid = true;
+		}
+
+		if(!mobile) {
+			$('#mobileErr').text('Required!');
+			mobileValid = false;
+		} else if(mobile.length > 11) {
+			$('#mobileErr').text('Mobile No within 11 character! Overflow '+ (mobile.length - 11) + 'digit\'s.');
+			mobileValid = false;
+		} else {
+			$('#mobileErr').text('');
+			mobileValid = true;
+		}
+
+		if(!subject) {
+			$('#subjectErr').text('Required!');
+			subjectValid = false;
+		} else if(subject.length > 50) {
+			$('#subjectErr').text('Subject within 40 characters! Overflow '+ (subject.length - 50) + 'char\'s.');
+			subjectValid = false;
+		} else {
+			$('#subjectErr').text('');
+			subjectValid = true;
+		}
+
+		if(email) {		
+			var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+			if(regex.test(email)) {
+				emailValid = true;
+				$('#emailErr').text('');
+			} else {
+				emailValid = false;
+				$('#emailErr').text('Please Provide a valid email! Or Empty Field.');
+			}
+		} else {
+			emailValid = true;
+			$('#emailErr').text('');
+		}
+
+		if(!message) {
+			$('#msgErr').text('Required!');
+			messageValid = false;
+		} else if(message.length > 500) {
+			$('#msgErr').text('Message within 500 character! Overflow '+ (message.length - 500) + 'char\'s.');
+			messageValid = false;
+		} else {
+			$('#msgErr').text('');
+			messageValid = true;
+		}
+
+		if(nameValid && mobileValid && subjectValid && emailValid && messageValid) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+</script>

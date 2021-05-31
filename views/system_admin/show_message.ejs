@@ -1,0 +1,73 @@
+<%- include('system_layouts/s_head') %>
+<style>
+  .message-show {
+    position: fixed;
+    width: 500px;
+    right: 45px;
+  }
+</style>
+<div class="container-fluid">  
+  <%- include('system_layouts/s_message') %>
+  <%- include('system_layouts/s_breadcumb') %>
+  <div class="row">
+    <div class="col-xl-12">
+      <div class="card">
+          <div class="card-body">
+              <h4 class="card-title">All Un-replied Messages</h4>
+              <p class="card-title-desc">You can show all messages from here...</p>
+              
+              <div class="row">
+                <div class="col-md-12">
+                  <% if(messageList.length > 0) { %>
+                    <% _.each(messageList, (v, k) => { %>
+                      <div class="cert-verify">
+                        <div class="cert-legend">Message</div>
+                        <div class="cert-body">
+                          <div class="table-responsive">
+                            <table class="cert-view-table">
+                              <tr>
+                                <th class="date-th">Date</th>
+                                <th>Name</th>
+                                <th>Mobile</th>
+                                <th>E-mail</th>
+                                <th>Subject</th>
+                                <th>Message</th>
+                                <th class="action-th" style="width: 110px;">Action</th>
+                              </tr>
+                                <tr>
+                                  <td><%= v.date_time %></td>
+                                  <td><%= v.name %></td>
+                                  <td><%= v.mobile %></td>
+                                  <td><%= v.email %></td>
+                                  <td><%= v.subject %></td>
+                                  <td ><%= v.message %> </td>
+                                  <td>
+                                    <button class="btn btn-success btn-sm replied_msg_btn" type="button" id="" data-id="<%= v.id %>">
+                                      <i class="bx bx-check"></i> Replied
+                                      <!-- <i class="bx bx-calendar-check"></i> -->
+                                    </button>
+                                    <button class="btn btn-danger btn-sm delete_msg_btn" type="button" id="" data-id="<%= v.id %>">
+                                      <i class="bx bxs-trash-alt"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    <% }); %>
+                  <% } else { %>
+                    <h5 class="text-danger text-center mt-5">Any messages is not available now.</h5>
+                  <% } %>
+                </div>
+              </div>
+          </div>
+      </div>
+    </div>
+	</div>
+
+</div>
+<%- include('system_layouts/s_foot') %>
+<script>  
+  
+</script>

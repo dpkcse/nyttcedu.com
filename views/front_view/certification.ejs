@@ -1,0 +1,198 @@
+<%- include('layouts/head') %>
+<%- include('layouts/top_navbar') %>
+
+<section>
+  <div class="container">
+    <div class="row">        
+      <div class="col-lg-12">
+        <div class="bg-light-violet p-4">
+          <h4 class="text-center p-2 verify-rslt">Verify Result</h4>
+          <br>
+          <div class="">
+            <h6 class="text-center">
+              Certificate Serial Number:
+            </h6>
+            <div class="text-center">
+              <input type="number" onwheel="this.blur()" onkeydown="search_input(event)" class="form-control serial_no_search" placeholder="Serial No..." id="serial_no" autocomplete="off">
+              <div class="text-danger" id="searchErr"></div>
+            </div>
+            <div class="text-center">
+              <br>
+              <button type="button" onclick="search_result()" class="btn btn-info">Search Result</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-12" id="std_info">
+        <div class="table-responsive" id="result_tbl">
+          <!-- search result place here -->
+        </div>
+      </div>
+  </div>
+</section>
+
+<%- include('layouts/footer') %>
+<%- include('layouts/sign_in_up_modal') %>
+<%- include('layouts/foot') %>
+<script>
+  function search_input(event) {
+    if (event.which == 13 || event.keyCode == 13 || event.which == 9 || event.keyCode == 9) {
+      search_result();
+    }
+  }
+  function search_result() {
+    var serial_no = $("#serial_no").val().trim();
+    if(serial_no != '') {
+      $("#searchErr").html('');
+      $.ajax({
+        type: "POST",
+        url: "/certification",
+        data: {
+          serial_no: serial_no
+        },
+        // cache: false,
+        success: function(res){
+          // console.log(res);
+          if(res.status) {
+            let html = '';
+            html += '<table class="table table-dark-violet">' +
+              '<tr>' +
+                '<td class="first-col">Serial No</td>' +
+                '<td class="middle-col">:</td>' +
+                '<td class="second-col" id="serial">'+ res.result.serial_no +'</td>' +
+              '</tr>' +
+              '<tr>' +
+                '<td class="first-col">Course Title</td>' +
+                '<td class="middle-col">:</td>' +
+                '<td class="second-col" id="courseTitle">'+ res.result.course_title +'</td>' +
+              '</tr>' +
+              '<tr>' +
+                '<td class="first-col">Students Name</td>' +
+                '<td class="middle-col">:</td>' +
+                '<td class="second-col" id="stdName">'+ res.result.s_name +'</td>' +
+              '</tr>' +
+              '<tr>' +
+                '<td class="first-col">Fathers Name</td>' +
+                '<td class="middle-col">:</td>' +
+                '<td class="second-col">'+ res.result.f_name +'</td>' +
+              '</tr>' +
+              '<tr>' +
+                '<td class="first-col">Mothers Name</td>' +
+                '<td class="middle-col">:</td>' +
+                '<td class="second-col">'+ res.result.m_name +'</td>' +
+              '</tr>' +
+              '<tr>' +
+                '<td class="first-col">Passing Year</td>' +
+                '<td class="middle-col">:</td>' +
+                '<td class="second-col">'+ res.result.passing_year +'</td>' +
+              '</tr>' +
+              '<tr>' +
+                '<td class="first-col">Session</td>' +
+                '<td class="middle-col">:</td>' +
+                '<td class="second-col">'+ res.result.session +'</td>' +
+              '</tr>' +
+              '<tr>' +
+                '<td class="first-col">Result</td>' +
+                '<td class="middle-col">:</td>' +
+                '<td class="second-col">"'+ res.result.result +'"</td>' +
+              '</tr>' +          
+            '</table>'+
+            '<div class="text-center">'+
+              '<button class="btn btn-success btn_result_src" id="print_result">Print</button><button id="cancel_result" class="btn btn-danger btn_result_src">Cancel</button>'+
+            '</div>';
+            // $("#result_tbl").html("");
+            // console.log($("#result_tbl"))
+            $("#result_tbl").html("").append(html);
+            $("#serial_no").val("");
+          } else {
+            $("#serial_no").val("");
+            $("#result_tbl").html("").append('<div class="result_err">'+res.err+'</div>');
+          }        
+        },
+        error: function (jqXhr, textStatus, errorMessage) {
+          console.log('Error: ' + errorMessage);
+        }
+      });
+    } else {
+      $("#searchErr").html('Please Input Serial Number');
+    }    
+  }
+
+  $("#serial_no").keypress(function (e) {
+    if (String.fromCharCode(e.keyCode).match(/[^0-9]/g)) return false;
+  });
+  $(document).on("click", "#cancel_result", function() {
+    $("#result_tbl").html('');
+    $("html, body").animate({scrollTop: 0}, 0);
+  });
+  $(document).on("click", "#print_result", function() {
+    var dNow = new Date();
+    let dateString = dNow.getDate() + '/' + (dNow.getMonth()+1) + '/' + dNow.getFullYear() +' | '+ dNow.getHours() + ":" + dNow.getMinutes() + ":" + dNow.getSeconds();
+    
+    var style = '<style>'+
+      '#printHead {width: 100%; position: relative; margin-top: 70px;}'+
+      '#printHead h3{text-align: center; margin: 30px 0px 0px 0px;}'+
+      '#printHead h6{text-align: center; margin: 5px 0px 0px 0px;}'+
+      '#result_tbl{width: 100%; position: relative;}'+
+      '#result_tbl table{border-collapse: collapse; width: 70%; position: absolute; left: 50%; margin-left: -35%; margin-top: 10px;}'+
+      '#result_tbl table td{padding: 4px; }'+
+      '#result_tbl table tr{border-bottom: 1px solid gray !important;  }'+
+      '#result_tbl table tr:first-child{border-top: 1px solid gray !important;  }'+
+      '.first-col{width: 120px;}'+
+      '.second-col{padding-left: 20px;}'+
+      '.btn_result_src{display: none;}'+
+      'h5.head {text-align: center;}'+
+      '.logoP{width: 50px; height: 65px; position: absolute; left: 50px; top: -10px;}'+
+      '@media print { a[href]:after { content: none !important; } }'+
+      '@page { size: auto; margin: 0; }'+
+      // '.print-date {position: absolute; top: 300px; left: 50px; }'+
+    '</style>';
+    var divToPrint=document.getElementById("result_tbl");
+    newWin= window.open("");
+    // console.log(window.location.protocol+'//'+window.location.hostname+':'+window.location.port+'/assets/logo/bttc_logo.png')
+    var html = '<div>'+
+    '<div id="printHead">'+
+      '<img src="/assets/logo/nyttc_logo.png" alt="NYTTC" class="logoP"/>' +
+      '<h3>National Youth & Technical Training Center</h3>'+
+      '<h6>House# 279/4-A, Road# 4, Tilpapara, Khilgaon, Dhaka-1219. Mobile: +8801912-148548, Email: nyttc97@gmail.com</h6>'+
+      '<br>'+
+      '<hr>'+
+      "<h5 class='head'>Student's Certficate Information</h5>"+
+    '</div>'+
+    '</div>';
+    newWin.document.write(html);
+    newWin.document.write(divToPrint.outerHTML);
+    // newWin.document.write('<h6 calss="print-date">Print Date: '+ formatTime() +'<h6>');
+    newWin.document.write(style);
+    newWin.document.title = $('#courseTitle').text() + ' = ' + $('#stdName').text() + ' = ' + $('#serial').text();
+
+    newWin.print();
+    newWin.close();
+  });
+
+  function formatTime( d = new Date(), ampm = true ) 
+  {
+    var hour = d.getHours();
+    
+    if ( ampm )
+    {
+        var a = ( hour >= 12 ) ? 'PM' : 'AM';
+        hour = hour % 12;
+        hour = hour ? hour : 12; // the hour '0' should be '12'  
+    }
+    var date = d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear() + ' | ';
+    var hour    = checkDigit(hour);  
+    var minute  = checkDigit(d.getMinutes());
+    var second  = checkDigit(d.getSeconds());
+  
+    // https://stackoverflow.com/questions/1408289/how-can-i-do-string-interpolation-in-javascript
+    return ( ampm ) ? `${date}${hour}:${minute}:${second} ${a}` : `${date}${hour}:${minute}:${second}`;
+  }
+
+  function checkDigit(t)
+  {
+    return ( t < 10 ) ? `0${t}` : t;
+  }
+</script>
+
+

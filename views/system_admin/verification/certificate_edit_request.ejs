@@ -1,0 +1,86 @@
+<%- include('../system_layouts/s_head') %>
+<style>
+  .message-show {
+    position: fixed;
+    width: 500px;
+    right: 45px;
+  }
+</style>
+<div class="container-fluid">  
+  <%- include('../system_layouts/s_message') %>
+  <%- include('../system_layouts/s_breadcumb') %>
+  <div class="row">
+    <div class="col-xl-12">
+      <div class="card">
+          <div class="card-body">
+              <h4 class="card-title">Verify Certificate Edit Request</h4>
+              <p class="card-title-desc">You can certificates edit request allow from here.</p>
+              
+              <div class="row">
+                <div class="col-md-12">
+                  <% if(Object.keys(allowCertList).length > 0) { %>
+                    <% _.each(allowCertList, (v, k) => { %>
+                      <div class="cert-verify" style="border: 1px solid #f46a6a;">
+                        <div class="cert-legend" style="background-color: #f46a6a;">Certificate Edit Request By : <%= v.update_req_user_id %></div>
+                        <div class="cert-body">
+                          <div class="table-responsive">
+                            <table class="cert-view-table">
+                              <tr>
+                                <th class="date-th">Entry Date</th>
+                                <th>Serial</th>
+                                <th>Name</th>
+                                <th>Father</th>
+                                <th>Mother</th>
+                                <th>Session</th>
+                                <th>Course</th>
+                                <th class="pr-th">P. Year</th>
+                                <th class="result-th">Result</th>
+                                <th class="action-th" style="width: 154px;">Action</th>
+                              </tr>
+                              <% _.each(v.data, (va, ka) => { %>
+                                <tr>
+                                  <td><%= va.created_at %></td>
+                                  <td><%= va.serial_no %></td>
+                                  <td><%= va.s_name %></td>
+                                  <td><%= va.f_name %></td>
+                                  <td><%= va.m_name %></td>
+                                  <td><%= va.session %></td>
+                                  <td><%= va.course_title %></td>
+                                  <td><%= va.passing_year %></td>
+                                  <td><%= va.result %></td>
+                                  <td>                                    
+                                    <a href="/certificate/update-certificate-old-way/<%= va.id %>" class="btn btn-success btn-sm edit_cert_btn" data-id="<%= va.id %>">
+                                      <!-- <i class="bx bx-check"></i> -->
+                                      <!-- <i class="bx bx-calendar-check"></i> -->
+                                      Edit
+                                    </a>
+                                    <button class="btn btn-primary btn-sm edit_allow_cert_btn" type="button" id="" data-id="<%= va.id %>">
+                                      <!-- <i class="bx bxs-trash-alt"></i> -->
+                                      Allow
+                                    </button>
+                                    <button class="btn btn-danger btn-sm cancel_update_cert_btn" data-id="<%= va.id %>">
+                                      Cancel
+                                    </button>
+                                  </td>
+                                </tr>
+                              <% }); %>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    <% }); %>
+                  <% } else { %>
+                    <h5 class="text-danger text-center mt-5">Certificate edit request is not available now.</h5>
+                  <% } %>
+                </div>
+              </div>
+          </div>
+      </div>
+    </div>
+	</div>
+
+</div>
+<%- include('../system_layouts/s_foot') %>
+<script>  
+
+</script>

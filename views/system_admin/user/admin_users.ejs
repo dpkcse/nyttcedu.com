@@ -1,0 +1,121 @@
+<%- include('../system_layouts/s_head') %>
+
+<div class="container-fluid">
+  <%- include('../system_layouts/s_breadcumb') %>
+  <div class="row">
+    <div class="col-xl-12">
+      <div class="card">
+          <div class="card-body">
+              <h4 class="card-title">Add New User - From Active Employees</h4>
+              <!-- <p class="card-title-desc">Provide valuable, actionable feedback to your users with HTML5 form validation–available in all our supported browsers.</p> -->
+              <form method="post" action="/admin-user/create-new-user">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <label for="employee_id">Employees</label>
+                            <select name="employee_id" id="employee_id" class="form-control" required="">
+                              <option value="">Select one...</option>
+                              <% _.each(employees, (v, k) => { %>
+                                <option value="<%= v.employee_id %>"><%= v.emp_name + " (" + v.email + ")" %></option>
+                              <% }); %>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <label for="user_type">User Type</label>
+                            <select name="user_type" id="user_type" class="form-control" required="">
+                              <option value="">Select one...</option>
+                              <option value="3">Normal User</option>
+                              <option value="2">Admin</option>
+                              <option value="1" disabled>Super Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="permission">Permissions</label>
+                            <input type="text" disabled name="permission" class="form-control" id="permission" placeholder="permission" value="">
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="text-center">
+                    <button class="btn btn-primary createUsrBtn" type="submit" name="saveUpdate" id="courseSaveUpdateBtn">Create New User</button>
+                    <button class="btn btn-danger createUsrBtn" type="reset" id="CourseResetBtn">Reset</button>
+                </div>
+            </form>
+          </div>
+      </div>
+    </div>
+	</div>
+	
+	<div class="row">
+		<div class="col-12">
+			<div class="card">
+				<div class="card-body">
+					<h4 class="card-title">All Users Lists</h4>
+					<p class="card-title-desc">
+						In here, showing all users lists are different role.
+					</p>
+	
+					<table id="datatable-buttons" class="table table-striped table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+						<thead>
+							<tr>
+								<th>Sl</th>
+								<th>Emp Name</th>
+								<th>Email</th>
+								<th>Type</th>
+								<th>Department</th>
+								<th>Designation</th>
+								<th>Emp Status</th>
+								<th>User Status</th>
+								<th>Mobile</th>
+								<th>Rest Pwd</th>
+								<th>Action</th>
+							</tr>
+						</thead>
+	
+						<tbody>
+							<% _.each(admin_users, (v, k) => { %>
+                <tr>
+                  <td><%= (k+1) %></td>
+                  <td><%= v.emp_name %></td>
+                  <td><%= v.email %></td>
+                  <td><%= v.user_type_text %></td>
+                  <td><%= v.department_text %></td>
+                  <td><%= v.designation_text %></td>
+                  <td><%= v.employee_status_text %></td>
+                  <td title="<%= v.status_result %>"><%= v.status_text %></td>
+                  <td><%= v.mobile_no %></td>
+                  <td>
+                    <button type="button" class="btn btn-info btn-sm">													
+                      <span class="bx bx-reset"></span>
+                    </button>
+                  </td>
+                  <td>
+                    <div class="btn-group btn-group-sm">
+                      <button type="button" class="btn btn-primary">													
+                        <span class="bx bxs-edit-alt"></span>
+                      </button>
+                      <button type="button" class="btn btn-warning">                        
+                        <span class="bx bxs-hide"></span>                        
+                      </button>
+                      <button type="button" class="btn btn-danger">
+                        <i class="mdi mdi-delete"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+            <% }); %>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+
+</div>
+
+<%- include('../system_layouts/s_foot') %>
