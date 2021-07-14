@@ -484,4 +484,30 @@ $(document).on('click', '#subsBtn', function() {
 		}
 	}
 });
+
+// Moving Text start
+	var left = 0;
+	var totalWidth = 0;
+	// var movingElm = document.getElementById("moving_txt").offsetWidth;
+	var movingElm = $("#moving_txt");
+	var movingElmWidth = movingElm.width();
+	var screenWidth = $(window).width();
+	var negativeLeft= movingElmWidth * (-1);
+	movingElm.css('left', negativeLeft+'px');
+	left = negativeLeft;
+	totalWidth = screenWidth + movingElmWidth;
+
+	setInterval(function() {
+		if(left < totalWidth) {
+			left ++;		
+			movingElm.css('left', left+'px');
+		} else {
+			left = negativeLeft;
+		}
+	}, 10);
+// Moving Text End
+// setInterval(function () {
+//   $('#moving_txt').fadeToggle();
+// }, 1500);
+
 // Kallol Added end

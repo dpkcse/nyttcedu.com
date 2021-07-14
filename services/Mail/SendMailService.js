@@ -5,15 +5,16 @@ var os = require("os");
 
 
 class SendMailService {
-    constructor() {        
-        // this.from = 'kallolray94@gmail.com';
-        // this.pass = 'Shorna24568ray';
-        this.from = 'info@bttcedubd.com';
-        this.pass = 'info??1997bttcedubd';
+    constructor() {
+        // this.from = 'info@bttcedubd.com';
+        // this.pass = 'info??1997bttcedubd';
+
+        this.from = 'info@nyttcedu.com';
+        this.pass = 'info@Training#12';
 
         this.transporter = nodemailer.createTransport({
             // service: 'gmail',
-            host: 'bttcedubd.com',
+            host: 'nyttcedu.com',
             port: '465',
             secure: true, // true for 465, false for other ports
             auth: {

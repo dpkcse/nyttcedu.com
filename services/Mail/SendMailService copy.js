@@ -4,8 +4,8 @@ var moment = require('moment');
 
 class SendMailService {
     constructor() {        
-        this.from = 'rivigassecret@gmail.com';
-        this.pass = '*rivigassecret007';
+        this.from = '';
+        this.pass = '';
 
         this.transporter = nodemailer.createTransport({
             service: 'gmail',

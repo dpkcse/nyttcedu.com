@@ -9423,7 +9423,8 @@ th.next.available, .prev.available {
     text-overflow: capitalize;
 }
 .course-con {
-    border: 2px solid #252c41;
+    /* border: 2px solid #252c41; */
+    border: 2px solid #221685;
     border-radius: 5px;
 }
 .course-type {
@@ -9432,32 +9433,39 @@ th.next.available, .prev.available {
     padding: 10px 25px;
     font-size: 22px;
     font-weight: bold;
-    background-color: #131b31;
-    color: #bfbfbf;
+    /* background-color: #131b31; */
+    background-color: #221685;
+    /* color: #bfbfbf; */
+    color: #d0d0d0;
 }
 .department-con1 {
     /* margin: 30px; */
     margin: 60px;
-    border: 2px solid #00adbf94;
+    border: 2px solid #135e7394;
     border-radius: 5px;
-    -webkit-box-shadow: 0px 0px 11px 4px rgb(0 173 182 / 53%);
-    -moz-box-shadow: 0px 0px 11px 4px rgb(0 173 182 / 53%);
-    box-shadow: 0px 0px 11px 4px rgb(0 173 182 / 53%);
+    -webkit-box-shadow: 0px 0px 11px 4px rgb(19 94 115 / 53%);
+    -moz-box-shadow: 0px 0px 11px 4px rgb(19 94 115 / 53%);
+    box-shadow: 0px 0px 11px 4px rgb(19 94 115 / 53%);
 }
 .department-name1 {
+    
     border-radius: 4px 4px 0 0;
     /* text-align: center; */
     padding: 10px 20px;
-    border-bottom: 2px solid #00adbf94;
-    color: #131b31;
+    /* border-bottom: 2px solid #00adbf94; */
+    border-bottom: 2px solid #135e7394;
+    /* color: #131b31; */
+    color: #ccc;
     font-size: 18px;
     font-weight: bold;
     /* background-color: rgba(0, 173, 182,0.1); */
-    background-color: rgb(0 173 182);
+    /* background-color: rgb(0 173 182); */
+    background-color: rgb(19 94 115);
 }
 .thead-color1 {
     /* background: rgba(0, 173, 182,0.1); */
     background: rgb(0 173 182 / 29%);
+    background: rgba(19, 94, 115, 0.26);
     font-weight: bold;
 }
 .dept-head-left {

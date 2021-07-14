@@ -4,7 +4,7 @@ const admin_certificate = {};
 admin_certificate.GetSomeOldCerticatesModel = async function GetSomeOldCerticatesModel(){
   return new Promise((resolve,reject)=>{
     // db.query('SELECT * FROM old_bttc_certificates ORDER BY SerialNO DESC LIMIT 50', function(error, result, fields) {            
-    db.query('SELECT * FROM new_old_bttc_certificates ORDER BY id DESC LIMIT 50', function(error, result, fields) {            
+    db.query('SELECT * FROM new_old_nyttc_certificates ORDER BY id DESC LIMIT 50', function(error, result, fields) {            
       if(error) {
         reject({ status: false, err: error });
       } else {
@@ -18,7 +18,7 @@ admin_certificate.GetSomeOldCerticatesModel = async function GetSomeOldCerticate
 admin_certificate.SaveOldWayCertificateModel = async function SaveOldWayCertificateModel(postData) {
   return new Promise((resolve,reject)=>{
     //ager data silo 2445 ta primary key er
-    db.query('INSERT INTO new_old_bttc_certificates SET ?', [postData], function(error, result, fields) {            
+    db.query('INSERT INTO new_old_nyttc_certificates SET ?', [postData], function(error, result, fields) {            
       if(error) {
         reject({ status: false, err: error });
       } else {
@@ -48,7 +48,7 @@ admin_certificate.CertificateRearrangeModel = async function CertificateRearrang
             result: v.Result.trim().replace(/['"]+/g, ''),
           };
           // console.log(data)
-          // db.query('INSERT INTO new_old_bttc_certificates SET ?', [data], function(error, result, fields) {
+          // db.query('INSERT INTO new_old_nyttc_certificates SET ?', [data], function(error, result, fields) {
           //   if(error) {
           //     console.log("Save problem ", error);
           //   } else {
@@ -66,7 +66,7 @@ admin_certificate.CertificateRearrangeModel = async function CertificateRearrang
 admin_certificate.FoundCertificateModel = async function FoundCertificateModel(data) {
   return new Promise((resolve,reject)=>{
     if(data.s_name != '') {
-      let sql = 'SELECT * FROM new_old_bttc_certificates WHERE s_name LIKE "%'+data.s_name+'%"';
+      let sql = 'SELECT * FROM new_old_nyttc_certificates WHERE s_name LIKE "%'+data.s_name+'%"';
       // console.log(sql)
       db.query(sql, [data.s_name], function(error, result, fields) {
         if(error) {
@@ -77,7 +77,7 @@ admin_certificate.FoundCertificateModel = async function FoundCertificateModel(d
         }
       });
     } else if(data.serial_no != '') {
-      db.query('SELECT * FROM new_old_bttc_certificates WHERE serial_no = ?', [data.serial_no], function(error, result, fields) {            
+      db.query('SELECT * FROM new_old_nyttc_certificates WHERE serial_no = ?', [data.serial_no], function(error, result, fields) {            
         if(error) {
           reject({ status: false, err: error });
         } else {
@@ -94,7 +94,7 @@ admin_certificate.FoundCertificateModel = async function FoundCertificateModel(d
 admin_certificate.CertificateEditRequestModel = async function CertificateEditRequestModel(certificate_id, user_id) {
   return new Promise((resolve,reject)=>{
     // if no other update request pending
-    db.query('UPDATE new_old_bttc_certificates SET update_request = 1, update_req_user_id = ? WHERE id = ? AND update_request = 0', [user_id, certificate_id], function(error, result, fields) {            
+    db.query('UPDATE new_old_nyttc_certificates SET update_request = 1, update_req_user_id = ? WHERE id = ? AND update_request = 0', [user_id, certificate_id], function(error, result, fields) {            
       if(error) {
         reject({ status: false, err: error });
       } else {
@@ -107,7 +107,7 @@ admin_certificate.CertificateEditRequestModel = async function CertificateEditRe
 admin_certificate.IsCertEditReqExistModel = async function IsCertEditReqExistModel(certificate_id) {
   return new Promise((resolve,reject)=>{
     // if no other update request pending
-    db.query('SELECT * FROM new_old_bttc_certificates WHERE id = ? ', [certificate_id], function(error, result, fields) {            
+    db.query('SELECT * FROM new_old_nyttc_certificates WHERE id = ? ', [certificate_id], function(error, result, fields) {            
       if(error) {
         reject({ status: false, err: error });
       } else {
@@ -120,7 +120,7 @@ admin_certificate.IsCertEditReqExistModel = async function IsCertEditReqExistMod
 
 admin_certificate.GetoldCertInfoByIdModel = async function GetoldCertInfoByIdModel(certificate_id) {
   return new Promise((resolve, reject)=>{
-      db.query('SELECT * FROM new_old_bttc_certificates WHERE update_request = 1 AND id = ?', [certificate_id], function(error, result, fields) {            
+      db.query('SELECT * FROM new_old_nyttc_certificates WHERE update_request = 1 AND id = ?', [certificate_id], function(error, result, fields) {            
           if(error) {
               reject({ status: false, err: error });
           } else {
@@ -132,7 +132,7 @@ admin_certificate.GetoldCertInfoByIdModel = async function GetoldCertInfoByIdMod
 
 admin_certificate.CertUpdateByIdModel = async function CertUpdateByIdModel(_update_data, id) {
   return new Promise((resolve, reject)=>{
-      db.query('UPDATE new_old_bttc_certificates SET ?, is_insert_or_update=is_insert_or_update+1 WHERE id = ?', [_update_data, id], function(error, result, fields) {            
+      db.query('UPDATE new_old_nyttc_certificates SET ?, is_insert_or_update=is_insert_or_update+1 WHERE id = ?', [_update_data, id], function(error, result, fields) {            
           if(error) {
               reject({ status: false, err: error });
           } else {
@@ -144,7 +144,7 @@ admin_certificate.CertUpdateByIdModel = async function CertUpdateByIdModel(_upda
 
 admin_certificate.CheckCertUpdatePermissionModel = async function CheckCertUpdatePermissionModel(certificate_id, user_id) {
   return new Promise((resolve, reject)=>{
-      db.query('SELECT * FROM new_old_bttc_certificates WHERE update_request = 1 AND update_req_user_id = ? AND id = ?', [user_id, certificate_id], function(error, result, fields) {            
+      db.query('SELECT * FROM new_old_nyttc_certificates WHERE update_request = 1 AND update_req_user_id = ? AND id = ?', [user_id, certificate_id], function(error, result, fields) {            
           if(error) {
               reject({ status: false, err: error });
           } else {

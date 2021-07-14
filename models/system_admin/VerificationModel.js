@@ -2,7 +2,7 @@ const verification = {};
 
 verification.GetVerifyNeededCertificatesModel = async function GetVerifyNeededCertificatesModel(){
   return new Promise((resolve,reject)=>{        
-    db.query('SELECT * FROM new_old_bttc_certificates WHERE is_approved = 0', function(error, result, fields) {            
+    db.query('SELECT * FROM new_old_nyttc_certificates WHERE is_approved = 0', function(error, result, fields) {            
       if(error) {
         reject({ status: false, err: error });
       } else {
@@ -15,7 +15,7 @@ verification.GetVerifyNeededCertificatesModel = async function GetVerifyNeededCe
 
 verification.VerifyCertificateModel = async function VerifyCertificateModel(id){
   return new Promise((resolve,reject)=>{        
-    db.query('UPDATE new_old_bttc_certificates SET is_approved = 1 WHERE id = ?', [id], function(error, result, fields) {            
+    db.query('UPDATE new_old_nyttc_certificates SET is_approved = 1 WHERE id = ?', [id], function(error, result, fields) {            
       if(error) {
         reject({ status: false, err: error });
       } else {
@@ -28,7 +28,7 @@ verification.VerifyCertificateModel = async function VerifyCertificateModel(id){
 
 verification.DeleteCertificateModel = async function DeleteCertificateModel(id){
   return new Promise((resolve,reject)=>{        
-    db.query('DELETE FROM new_old_bttc_certificates WHERE is_approved = 0 AND id = ?', [id], function(error, result, fields) {            
+    db.query('DELETE FROM new_old_nyttc_certificates WHERE is_approved = 0 AND id = ?', [id], function(error, result, fields) {            
       if(error) {
         reject({ status: false, err: error });
       } else {
@@ -41,7 +41,7 @@ verification.DeleteCertificateModel = async function DeleteCertificateModel(id){
 
 verification.GetEditRequestCertificatesModel = async function GetEditRequestCertificatesModel(){
   return new Promise((resolve,reject)=>{        
-    db.query('SELECT * FROM new_old_bttc_certificates WHERE update_request = 1', function(error, result, fields) {            
+    db.query('SELECT * FROM new_old_nyttc_certificates WHERE update_request = 1', function(error, result, fields) {            
       if(error) {
         reject({ status: false, err: error });
       } else {
