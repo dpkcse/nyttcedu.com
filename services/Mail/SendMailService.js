@@ -14,7 +14,7 @@ class SendMailService {
 
         this.transporter = nodemailer.createTransport({
             // service: 'gmail',
-            host: 'nyttcedu.com',
+            host: 'bttcedubd.com',
             port: '465',
             secure: true, // true for 465, false for other ports
             auth: {
@@ -25,7 +25,7 @@ class SendMailService {
 
         this.mailOptions = {
             from: {
-                name: 'BTTC',
+                name: 'NYTTC',
                 address: this.from
             },
             to: '',
@@ -49,23 +49,23 @@ class SendMailService {
                             '<html xmlns="http://www.w3.org/1999/xhtml">' +
                                 '<head>'+
                                     '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />' +
-                                    '<title>BTTC</title>' +
+                                    '<title>NYTTC</title>' +
                                     '<style type="text/css">';
                                         msgStyle = '.reset { background: #28a745; color: #FFF !important; padding: 10px 15px; border-radius: 5px; text-decoration: none;} .reset:hover {background-color: #17a2b8;}';
                                         msg += msgStyle;
                                     msg += '</style>' +
                                 '</head>'+
                                 '<body>' +
-                                    '<h3>BTTC Reset Password</h3>' +
+                                    '<h3>NYTTC Reset Password</h3>' +
                                     '<h4>Please Click The Button For Reset Password: <a class="reset" href="'+_current_url +'?useremail='+_useremail+'&token='+_token +'" target="_blank">Click Here</a></h4>' +
                                     '<br></br>'+
-                                    '<h5>Thank you for using <a href="https://bttcedubd.com" target="_blank">BTTC</a> system.</h5>' +
+                                    '<h5>Thank you for using <a href="https://nyttcedu.com" target="_blank">NYTTC</a> system.</h5>' +
                                     '<h4>Design & Developed By Kallol Ray @DnKFlocks, kallolray94@gmail.com, 01727-379068</h4>' +
                                 '</body>' +
                             '</html>';
                 // console.log(msg)
                 this.mailOptions.to = _useremail;
-                this.mailOptions.subject = "BTTC - Reset Admin Login Password";
+                this.mailOptions.subject = "NYTTC - Reset Admin Login Password";
                 this.mailOptions.html = msg;
                 
                 this.transporter.sendMail(this.mailOptions, function(error, info){
