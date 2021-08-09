@@ -8916,6 +8916,9 @@ th.next.available, .prev.available {
 }
 
 @media (min-width: 1024px) {
+    .hero_banner {
+        padding: 10px 0 30px;
+    }
     .top_hm_2 {
         position: relative;
         top: -45px;
@@ -8946,7 +8949,7 @@ th.next.available, .prev.available {
     .hero_banner {
         /* min-height: 620px; */
         /* height:92vh; */
-        min-height: 505px;    
+        min-height: 525px;    
         height:80vh;
         padding: 0;
     }
