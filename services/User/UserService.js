@@ -7,6 +7,8 @@ var MailService = require("../Mail/SendMailService");
 var CommonService = require("../Common/CommonService");
 var userModels = require("../../models/user");
 
+const default_password = 'Nyttc@123456#User';
+
 class UserService {
     constructor() {
         this.USER_MODELS = userModels;
@@ -108,7 +110,6 @@ class UserService {
 
                             employee_status       : empObj[v.emp_id].status,
                             employee_status_text  : empStatusObj[empObj[v.emp_id].status],
-
                             
                             user_type         : v.user_type,
                             user_type_text    : userTypeObj[v.user_type],
@@ -141,7 +142,6 @@ class UserService {
                 let _employee_id = employee_id;
                 let _user_type = user_type;
                 let _user_id = user_id;
-                let default_password = 'Bttc123456';
                 let user = {                    
                     emp_id: _employee_id,
                     user_type: _user_type,
@@ -156,11 +156,11 @@ class UserService {
                     var salt = bcrypt.genSaltSync(10);
                     var hash = bcrypt.hashSync(default_password, salt);
                     user.password = hash;
-                    console.log("user", user)
+                    // console.log("user", user)
                     let userEmailExist = await this.USER_MODELS.CheckUserEmailAlreadyExitOrNotModel(user.email);
                     if(userEmailExist.status) {
                         //user already exist
-                        console.log("userEmailExist.result.length", userEmailExist.result.length)
+                        // console.log("userEmailExist.result.length", userEmailExist.result.length)
                         if(userEmailExist.result.length > 0) {
                             return {
                                 status: false,
@@ -168,7 +168,7 @@ class UserService {
                             }
                         } else {
                             let createUsr = await this.USER_MODELS.CreateNewSystemUserModel(user);
-                            console.log("CreateUse", createUsr)
+                            // console.log("CreateUse", createUsr)
                             if(createUsr.status) {
                                 return {
                                     status: true,
@@ -351,6 +351,37 @@ class UserService {
                     return {
                         status: false,
                         errMsg: 'New Password and Re-enter New Password doesnt match.'
+                    }
+                }
+            } catch(err) {
+                return {
+                    status: false,
+                    err: err
+                }
+            }
+        }
+        async ResetPassByAdminService(data) {
+            try {
+                if (data.user_type == '1') {
+                    //user type super admin
+                    return {
+                        status: false,
+                        errMsg: 'Unable to reset password for this user.'
+                    }
+                } else {            
+                    var salt = bcrypt.genSaltSync(10);
+                    var hash = bcrypt.hashSync(default_password, salt);                    
+                    let resetDefaultPass = await this.USER_MODELS.ResetDefaultPass(data.user_id, data.emp_id, data.user_type, hash);
+                    if(resetDefaultPass.status) {
+                        return {
+                            status: true,
+                            sucMsg: 'Password reset successfully.'
+                        }
+                    } else {
+                        return {
+                            status: false,
+                            errMsg: 'Password Reset Faild.'
+                        }
                     }
                 }
             } catch(err) {

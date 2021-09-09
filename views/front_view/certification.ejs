@@ -13,7 +13,7 @@
               Certificate Serial Number:
             </h6>
             <div class="text-center">
-              <input type="number" onwheel="this.blur()" onkeydown="search_input(event)" class="form-control serial_no_search" placeholder="Serial No..." id="serial_no" autocomplete="off">
+              <input type="text" onwheel="this.blur()" onkeydown="search_input(event)" class="form-control serial_no_search" placeholder="Serial No..." id="serial_no" autocomplete="off">
               <div class="text-danger" id="searchErr"></div>
             </div>
             <div class="text-center">
@@ -119,7 +119,12 @@
   }
 
   $("#serial_no").keypress(function (e) {
-    if (String.fromCharCode(e.keyCode).match(/[^0-9]/g)) return false;
+    // if (String.fromCharCode(e.keyCode).match(/[^0-9]/g)) return false;
+    // onkeypress="return (event.charCode >= 48 && event.charCode <= 57) ||  event.charCode == 45 || (event.charCode >= 65 && event.charCode <= 90)"
+    if((e.charCode >= 48 && e.charCode <= 57) ||  e.charCode == 45 || (e.charCode >= 65 && e.charCode <= 90)) {
+    } else {
+      return false;
+    }
   });
   $(document).on("click", "#cancel_result", function() {
     $("#result_tbl").html('');

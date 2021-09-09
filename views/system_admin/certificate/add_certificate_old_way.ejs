@@ -42,8 +42,9 @@
 									</div>
                     <div class="col-md-2">
                         <div class="form-group">
-                            <label for="serial_no">Serial No <span class="mendatory">*</span></label>
-                            <input type="text" name="serial_no" class="form-control" id="serial_no" placeholder="Serial No" value="" required="" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+                        		<label for="serial_no">Serial No <span class="mendatory">*</span></label>
+                            <input type="text" name="serial_no" class="form-control" id="serial_no" placeholder="Serial No" value="" required="" onkeypress="return (event.charCode >= 48 && event.charCode <= 57) ||  event.charCode == 45 || (event.charCode >= 65 && event.charCode <= 90)">
+                            <!-- <input type="text" name="serial_no" class="form-control" id="serial_no" placeholder="Serial No" value="" required=""> -->
                         </div>
                     </div>
                     

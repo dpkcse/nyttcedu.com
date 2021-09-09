@@ -48,4 +48,26 @@ var self = (module.exports = {
 			res.status( 500 ).json( err );
 		}
   },
+
+  ResetPassByMenualAdminOnly : async function(req, res, next) {
+    try {
+      let data = {
+        user_id   : req.body.user_id.trim(),
+        emp_id    : req.body.emp_id.trim(),
+        user_type : req.body.user_type.trim(),
+      }
+      // console.log("user_id = ", data.user_id);
+      // console.log("emp_id = ", data.emp_id);
+      // console.log("user_type = ", data.user_type);
+
+      const UserServiceResetIns = new UserService();
+      var reset_by_admin = await UserServiceResetIns.ResetPassByAdminService(data);
+      // console.log("reset_by_admin = ", reset_by_admin);      
+      res.send(reset_by_admin);      
+    } catch (err) {
+      console.log(err);
+      res.status(500).json(err);
+    }
+  },
+  
 });

@@ -113,7 +113,7 @@
         </li>
         <% } %>
 
-        <% if(user_info.user_type == 1 || user_info.user_type == 2 ) { %>
+        
           <li class="menu-title">User and Other</li>
           <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
@@ -121,13 +121,14 @@
               <span>User</span>
             </a>
             <ul class="sub-menu" aria-expanded="false">
-              <li><a href="/admin-user">Create System User </a></li>
+              <% if(user_info.user_type == 1 || user_info.user_type == 2 ) { %>
+                <li><a href="/admin-user">Create System User </a></li>
+              <% } %>
               <li><a href="/admin-user/change-password">Change My Password</a></li>
               <!-- <li><a href="#">Search User</a></li> -->
               <!-- <li><a href="#">Update User Info</a></li> -->
             </ul>
           </li>
-        <% } %>
         
 
         <!-- <li>

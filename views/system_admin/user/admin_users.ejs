@@ -1,6 +1,14 @@
 <%- include('../system_layouts/s_head') %>
-
+<style>
+  .message-show {
+    position: fixed;
+    width: 26%;
+    right: 44px;
+    top: 127px;
+  }
+</style>
 <div class="container-fluid">
+  <%- include('../system_layouts/s_message') %>
   <%- include('../system_layouts/s_breadcumb') %>
   <div class="row">
     <div class="col-xl-12">
@@ -28,7 +36,7 @@
                               <option value="">Select one...</option>
                               <option value="3">Normal User</option>
                               <option value="2">Admin</option>
-                              <option value="1" disabled>Super Admin</option>
+                              <!-- <option value="1" disabled>Super Admin</option> -->
                             </select>
                         </div>
                     </div>
@@ -85,11 +93,11 @@
                   <td><%= v.user_type_text %></td>
                   <td><%= v.department_text %></td>
                   <td><%= v.designation_text %></td>
-                  <td><%= v.employee_status_text %></td>
-                  <td title="<%= v.status_result %>"><%= v.status_text %></td>
+                  <td class="<% if(v.employee_status_text == 'On Job') { %>text-success <% } else { %>text-danger<% } %>"><%= v.employee_status_text %></td>
+                  <td title="<%= v.status_result %>" class="<% if(v.status_text == 'Active') { %>text-success <% } else { %>text-danger<% } %>"><%= v.status_text %></td>
                   <td><%= v.mobile_no %></td>
                   <td>
-                    <button type="button" class="btn btn-info btn-sm">													
+                    <button type="button" class="btn btn-info btn-sm reset_user_pass_btn" id="" data-emp-id="<%= v.emp_id %>" data-user-id="<%= v.user_id %>" data-user-type="<%= v.user_type %>">
                       <span class="bx bx-reset"></span>
                     </button>
                   </td>
@@ -119,3 +127,73 @@
 </div>
 
 <%- include('../system_layouts/s_foot') %>
+<script>  
+  $(document).on('click', '.reset_user_pass_btn', function(event) {    
+    let emp_id = $(this).attr('data-emp-id');
+    let user_id = $(this).attr('data-user-id');
+    let user_type = $(this).attr('data-user-type');
+    if(emp_id && user_id && user_type) {
+      $('.confirmGreenModal #conGreenLabel').text('Reset Password !!');
+      $('.confirmGreenModal #conGreenMsg').text('Are you sure you want to reset this user password to "Nyttc@123456#User" ?');
+      $('.confirmGreenModal .modal-footer #reset_pass_by_admin').remove();
+      $('.confirmGreenModal .modal-footer').append('<button type="button" id="reset_pass_by_admin" class="btn btn-success" user_id="' + user_id + '" emp_id="' + emp_id + '" user_type="'+ user_type +'">Yes</button>');
+      $('.confirmGreenModal').modal();
+    }
+  });
+
+  var msg_no = 0; //msg control code
+  $(document).on('click', '#reset_pass_by_admin', function(event) {
+    msg_no++;
+    let user_id = $(this).attr('user_id');
+    let emp_id = $(this).attr('emp_id');
+    let user_type = $(this).attr('user_type');
+    console.log("user_id", user_id)
+    console.log("emp_id", emp_id)
+    console.log("user_type", user_type)
+    if(user_id && emp_id && user_type) {
+      $.ajax({
+        url: "/reset-admin-password/reset-pass-menual-by-admin-only",
+        cache: false,
+        type: "POST",
+        data: {
+          user_id   : user_id,
+          emp_id    : emp_id,
+          user_type : user_type,
+        },
+        success: function(res, status, xhr) {
+          console.log("res", res);
+          if(res.status) {
+            $('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-success alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.sucMsg +
+              '</div>'
+            ); 
+            hide_msg('#msg_'+msg_no);
+            $('.verify_certificate_btn').each(function(k, v) {
+              if($(v).attr('data-id') == id) {
+                v.closest('tr').remove();
+              }
+            });
+
+            $('#notificaion_counter').text((parseInt($('#notificaion_counter').text()) - 1));
+          } else {
+            $('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-danger alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.errMsg +
+              '</div>'
+            );
+            hide_msg('#msg_'+msg_no);
+          }
+          $('.confirmGreenModal').modal('hide');
+        },
+        error: function (xhr, status, error) {
+          console.log(xhr);
+          console.log(status);
+          console.log(error);
+        }
+      });
+    }
+  });
+</script>

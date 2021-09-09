@@ -141,7 +141,19 @@ user.IsTokenPresentModel = async function IsTokenPresentModel(useremail){
     });
 }
 
-
+user.ResetDefaultPass = async function ResetDefaultPass(user_id, emp_id, user_type, default_password){
+    // zyEAq8fW0JKBEeyO1qnR2WVmI0YcsDskxqz5VEEsjricnmHdgxSBcw2usnTDpbjDvoM6DFh1qsivSk0QzvubFlMZdUWVktpuYHuz
+    return new Promise((resolve, reject) => {
+        db.query('UPDATE users SET password = ?  WHERE user_id = ? AND emp_id = ? AND user_type = ?', [ default_password, user_id, emp_id, user_type ], function(error, result, fields) {
+            if(error) {
+                reject({ status: false, err: error });
+            } else {
+                console.log("result", result)
+                resolve({ status: true, result: result });
+            }
+        });
+    });
+}
 
 
 

@@ -41,7 +41,7 @@ verification.DeleteCertificateModel = async function DeleteCertificateModel(id){
 
 verification.GetEditRequestCertificatesModel = async function GetEditRequestCertificatesModel(){
   return new Promise((resolve,reject)=>{        
-    db.query('SELECT * FROM new_old_nyttc_certificates WHERE update_request = 1', function(error, result, fields) {            
+    db.query('SELECT * FROM new_old_bttc_certificates WHERE update_request = 1 OR update_request = 2', function(error, result, fields) {
       if(error) {
         reject({ status: false, err: error });
       } else {

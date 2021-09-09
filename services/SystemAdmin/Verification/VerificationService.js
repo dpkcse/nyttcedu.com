@@ -153,6 +153,7 @@ class VerificationService {
                   course_title: v.course_title,
                   passing_year: v.passing_year,
                   result      : v.result,
+                  update_request: v.update_request,
                   created_at  : moment(v.created_at).format('L'),
                 });
             });

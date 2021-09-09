@@ -20,8 +20,8 @@
                 <div class="col-md-12">
                   <% if(Object.keys(allowCertList).length > 0) { %>
                     <% _.each(allowCertList, (v, k) => { %>
-                      <div class="cert-verify" style="border: 1px solid #f46a6a;">
-                        <div class="cert-legend" style="background-color: #f46a6a;">Certificate Edit Request By : <%= v.update_req_user_id %></div>
+                      <div class="cert-verify" style="border: 1px solid #66005bed;">
+                        <div class="cert-legend" style="background-color: #66005b;">Certificate Edit Request By : <%= v.update_req_user_id %></div>
                         <div class="cert-body">
                           <div class="table-responsive">
                             <table class="cert-view-table">
@@ -54,10 +54,12 @@
                                       <!-- <i class="bx bx-calendar-check"></i> -->
                                       Edit
                                     </a>
+                                    <% if(va.update_request == '1') { %>
                                     <button class="btn btn-primary btn-sm edit_allow_cert_btn" type="button" id="" data-id="<%= va.id %>">
                                       <!-- <i class="bx bxs-trash-alt"></i> -->
                                       Allow
                                     </button>
+                                    <% } %>
                                     <button class="btn btn-danger btn-sm cancel_update_cert_btn" data-id="<%= va.id %>">
                                       Cancel
                                     </button>
@@ -81,6 +83,155 @@
 
 </div>
 <%- include('../system_layouts/s_foot') %>
-<script>  
+<script>
+  var msg_no = 0;
+  var cancelCertUpdateEvent;
+  var allowCertUpdateEvent;
+  $(document).on('click', '.edit_allow_cert_btn', function(e) {
+    let id = $(this).attr('data-id').trim();
+    allowCertUpdateEvent = this;
+    if(id) {
+      $('.confirmGreenModal #conGreenLabel').text('Certificate Update Request Allow!');
+      $('.confirmGreenModal #conGreenMsg').text('Are you sure you want to update request allow for this certificate information?');
+      $('.confirmGreenModal .modal-footer #send_allow_certificate_up_req').remove();
+      $('.confirmGreenModal .modal-footer').append('<button type="button" id="send_allow_certificate_up_req" class="btn btn-success" data-id="' + id + '">Yes</button>');
+      $('.confirmGreenModal').modal();
+    }   
+  });
 
+  $(document).on('click', '#send_allow_certificate_up_req', function(event) {
+    msg_no++;
+    let id = $(this).attr('data-id').trim();
+    // console.log(id);
+    if(id) {
+      $.ajax({
+        url: "/certificate/allow-edit-request",
+        cache: false,
+        type: "POST",
+        data: {
+          id    : id,
+        },
+        success: function(res, status, xhr) {
+          // console.log(res);
+          // console.log(allowCertUpdateEvent)
+          $(allowCertUpdateEvent).remove();
+          if(res.status) {
+            $('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-success alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.sucMsg +
+              '</div>'
+            ); 
+            hide_msg('#msg_'+msg_no);
+            let is_exit_counter = $("#page-header-notifications-dropdown").find("#notificaion_counter").length;
+            // console.log(is_exit_counter);
+            let data_user_type = $("#page-header-notifications-dropdown").attr('data-user-type');
+              // console.log(data_user_type)
+            if(data_user_type == 1 || data_user_type == 2) {
+              if(is_exit_counter == 0) {
+                $("#page-header-notifications-dropdown").find("i").after(
+                  '<span class="badge badge-danger badge-pill" id="notificaion_counter">'+                
+                  '1'+
+                  '</span>'
+                );
+              } else {
+                $('#notificaion_counter').text((parseInt($('#notificaion_counter').text()) - 1));
+              }
+            }
+            // $( "#datatable-sc-result" ).find("tr.child ul").find('li span #find_cert_'+id).prop("disabled", true)
+          } else {
+            $('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-danger alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.errMsg +
+              '</div>'
+            );
+            hide_msg('#msg_'+msg_no);
+          }
+          $('.confirmGreenModal').modal('hide');          
+        },
+        error: function (xhr, status, error) {
+          console.log(xhr);
+          console.log(status);
+          console.log(error);
+        }
+      });
+    }
+  });
+  
+
+  
+  $(document).on('click', '.cancel_update_cert_btn', function(e) {
+    let id = $(this).attr('data-id').trim();
+    cancelCertUpdateEvent = this;
+    if(id) {
+      $('.confirmRedModal #conRedLabel').text('Cancel Update Request!');
+      $('.confirmRedModal #conRedMsg').text('Are you sure you want to cancel update request for this certificate information?');
+      $('.confirmRedModal .modal-footer #cancel_up_req').remove();
+      $('.confirmRedModal .modal-footer').append('<button type="button" id="cancel_up_req" class="btn btn-success" data-id="' + id + '">Yes</button>');
+      $('.confirmRedModal').modal();
+    }   
+  });
+
+  
+  $(document).on('click', '#cancel_up_req', function(event) {
+    msg_no++;
+    let id = $(this).attr('data-id').trim();
+    console.log(id);
+    if(id) {
+      $.ajax({
+        url: "/certificate/cancel-edit-request",
+        cache: false,
+        type: "POST",
+        data: {
+          id    : id,
+        },
+        success: function(res, status, xhr) {
+          console.log(res);
+          // =================================
+          if(res.status) {
+            // console.log(cancelCertUpdateEvent);
+            $(cancelCertUpdateEvent).closest('tr').remove();
+            $('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-success alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.sucMsg +
+              '</div>'
+            ); 
+            hide_msg('#msg_'+msg_no);
+            let is_exit_counter = $("#page-header-notifications-dropdown").find("#notificaion_counter").length;
+            // console.log(is_exit_counter);
+            let data_user_type = $("#page-header-notifications-dropdown").attr('data-user-type');
+              // console.log(data_user_type)
+            if(data_user_type == 1 || data_user_type == 2) {
+              if(is_exit_counter == 0) {
+                $("#page-header-notifications-dropdown").find("i").after(
+                  '<span class="badge badge-danger badge-pill" id="notificaion_counter">'+                
+                  '1'+
+                  '</span>'
+                );
+              } else {
+                $('#notificaion_counter').text((parseInt($('#notificaion_counter').text()) - 1));
+              }
+            }
+            // $( "#datatable-sc-result" ).find("tr.child ul").find('li span #find_cert_'+id).prop("disabled", true)
+          } else {
+            $('.message-show').append(
+              '<div id="msg_'+msg_no+'" class="alert alert-danger alert-dismissable">' +
+                '<button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+
+                  res.errMsg +
+              '</div>'
+            );
+            hide_msg('#msg_'+msg_no);
+          }
+          $('.confirmRedModal').modal('hide');          
+        },
+        error: function (xhr, status, error) {
+          console.log(xhr);
+          console.log(status);
+          console.log(error);
+        }
+      });
+    }
+  });
 </script>

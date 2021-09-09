@@ -167,7 +167,7 @@
 										// 	'<input type="hidden" name="certificate_id" value="'+v.id+'" />'+
 										// 	'<input class="btn btn-success btn-sm" type="submit" value="Edit Request" />'+
 										// '</form>'+
-										'<input type="button" class="btn btn-success btn-sm edit_cert_req" id="find_cert_'+v.id+'" data-id="'+v.id+'" value="Edit Request" '+ v.update_btn_is_enable+' title="' + (v.update_request >= 0? 'Already have a edit request!':'') + '"/>'+
+										'<input type="button" class="btn btn-success btn-sm edit_cert_req" id="find_cert_'+v.id+'" data-id="'+v.id+'" value="Edit Request" '+ v.update_btn_is_enable+' title="' + ((v.update_request == 1 || v.update_request == 2)? 'Already have a edit request!':'') + '"/>'+
 										'<button class="btn btn-primary btn-sm ml-1" data-id="'+v.id+'">Certificate View</button>'+
 									'</td>'+									
 								'</tr>';
@@ -216,12 +216,37 @@
 	$(document).on('click', '.edit_cert_req', function(e) {
 		let id = $(this).attr('data-id').trim();
 		if(id) {
-      $('.confirmGreenModal #conGreenLabel').text('Certificate Update Request !');
-      $('.confirmGreenModal #conGreenMsg').text('Are you sure you want to send a update request for this certificate information?');
-      $('.confirmGreenModal .modal-footer #send_update_certificate_req').remove();
-      $('.confirmGreenModal .modal-footer').append('<button type="button" id="send_update_certificate_req" class="btn btn-success" data-id="' + id + '">Yes</button>');
-      $('.confirmGreenModal').modal();
-    }		
+			$.ajax({
+				url: "/certificate/allow-edit-request-check-for-current-user",
+				cache: false,
+				type: "POST",
+				data: {
+					id 		: id,
+				},
+				success: function(res, status, xhr) {
+          console.log(res);
+					if(res.status) {
+						//allow return true
+						console.log("location.origin", location.origin)
+						window.location.href = window.location.origin + '/certificate/update-certificate-old-way/' + id;
+					} else {
+						$('.confirmGreenModal #conGreenLabel').text('Certificate Update Request !');
+						$('.confirmGreenModal #conGreenMsg').text('Are you sure you want to send a update request for this certificate information?');
+						$('.confirmGreenModal .modal-footer #send_update_certificate_req').remove();
+						$('.confirmGreenModal .modal-footer').append('<button type="button" id="send_update_certificate_req" class="btn btn-success" data-id="' + id + '">Yes</button>');
+						$('.confirmGreenModal').modal();
+					}					
+				},
+				error: function (xhr, status, error) {
+					console.log(xhr);
+					console.log(status);
+					console.log(error);
+				}
+			});
+
+
+      
+    }
 	});
 
 
@@ -281,4 +306,5 @@
 			});
     }
   });
+  
 </script>

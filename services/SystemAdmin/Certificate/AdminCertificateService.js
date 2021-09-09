@@ -54,7 +54,7 @@ class AdminCertificateService {
       }
     }
 
-    async FindCertificateService(data) {
+    async FindCertificateService(data, user_id) {
       try {
         let s_name = data.s_name;
 				let serial_no = data.serial_no;
@@ -79,7 +79,7 @@ class AdminCertificateService {
                 is_received: v.is_received == 1 ? 'Yes' :'No',
                 received_date: v.received_date == null ? 'No' :moment(v.received_date).format('L'),
                 update_request: v.update_request,
-                update_btn_is_enable: v.update_request == 1 ? 'disabled' : '',
+                update_btn_is_enable: (user_id == v.update_req_user_id) ? '' : ((v.update_request == 1 || v.update_request == 2) ? 'disabled' : ''),
               });
             });
             // console.log('ss', certificates)
@@ -122,10 +122,18 @@ class AdminCertificateService {
             } else {
               const editReq = await this.AC_MODELS.CertificateEditRequestModel(certificate_id, user_id);
               if(editReq.status && editReq.result.affectedRows == 1) {
-                return {
-                  status: true,
-                  sucMsg: 'Certificate Edit Request Successfully Send To Admin'
-                }
+                const reCallEditReqData = await this.AC_MODELS.CertificateDataRecallAndInsetToBackupModel(certificate_id, user_id);
+                if(reCallEditReqData.status && editReq.result.affectedRows == 1) {
+                  return {
+                    status: true,
+                    sucMsg: 'Certificate Edit Request Successfully Send To Admin'
+                  }
+                } else {
+                  return {
+                    status: false,
+                    errMsg: 'Unable to request edit certificate 4'
+                  }
+                }                
               } else {
                 return {
                   status: false,
@@ -154,9 +162,9 @@ class AdminCertificateService {
       }
     }
 
-    async GetoldCertInfoByIdService(certificate_id) {
+    async GetoldCertInfoByIdService(user_id, certificate_id) {
       try {
-        var singleCertInfo = await this.AC_MODELS.GetoldCertInfoByIdModel(certificate_id);
+        var singleCertInfo = await this.AC_MODELS.GetoldCertInfoByIdModel(user_id, certificate_id);
         // console.log("singleCertInfo", singleCertInfo.result)
         if(singleCertInfo.status && singleCertInfo.result.length == 1) {
           return {
@@ -204,6 +212,26 @@ class AdminCertificateService {
       }
     }
 
+    async updateBackupCertificateStatus(id, serial_no) {
+      try {
+        var backupCertUpdate = await this.AC_MODELS.updateBackupCertificateStatusModel(id, serial_no);
+        if(backupCertUpdate.status && backupCertUpdate.result.affectedRows == 1) {
+          return {
+            status: true,
+          }
+        } else {
+          return {
+            status: false,
+          }
+        }
+      } catch(err) {
+        return {
+          status: false,
+          err: err
+        }
+      }
+    }
+
     async CheckCertUpdatePermissionService(certificate_id, user_id) {
       try {
         var hasPerm = await this.AC_MODELS.CheckCertUpdatePermissionModel(certificate_id, user_id);
@@ -225,9 +253,80 @@ class AdminCertificateService {
       }
     }
     
+    async CertEditReqCancelService(certificate_id, user_id) {
+      try {
+        var isCancel = await this.AC_MODELS.CertEditReqCancelModel(certificate_id, user_id);
+        console.log('isCancel', isCancel)
+        if(isCancel.status && isCancel.result.changedRows == 1) {
+          return {
+            status: true,
+            sucMsg: 'Certificate update request cancel successfullly.'
+          }
+        } else {
+          return {
+            status: false,
+            errMsg: 'Unable to cancel certificate update request!'
+          }
+        }
+      } catch(err) {
+        return {
+          status: false,
+          errMsg: err
+        }
+      }
+    }
+
+    async AllowEditReqService(certificate_id, user_id) {
+      try {
+        var isAllow = await this.AC_MODELS.AllowEditReqModel(certificate_id, user_id);
+        console.log('isAllow', isAllow)
+        if(isAllow.status && isAllow.result.changedRows == 1) {
+          return {
+            status: true,
+            sucMsg: 'Certificate update request allowed successfullly.'
+          }
+        } else {
+          return {
+            status: false,
+            errMsg: 'Unable to allow certificate update request!'
+          }
+        }
+      } catch(err) {
+        return {
+          status: false,
+          errMsg: err
+        }
+      }
+    }
+
+    async IsAllowEditReqForCurrentUserService(certificate_id, user_id) {
+      try {
+        var isIdAllow = await this.AC_MODELS.IsAllowEditReqForCurrentUserModel(certificate_id, user_id);
+        console.log('isIdAllow', isIdAllow.result.length)
+        if(isIdAllow.status && isIdAllow.result.length == 1) {
+          return {
+            status: true,
+            sucMsg: 'Certificate update allow For this user.'
+          }
+        } else {
+          return {
+            status: false,
+            errMsg: 'Certificate update Not Allow for this user!'
+          }
+        }
+      } catch(err) {
+        return {
+          status: false,
+          errMsg: err
+        }
+      }
+    }
+
     async CertificateRearrangeService () {      
       const reArrange = await this.AC_MODELS.CertificateRearrangeModel();
     }
+
+    
 }
 
 module.exports = AdminCertificateService;

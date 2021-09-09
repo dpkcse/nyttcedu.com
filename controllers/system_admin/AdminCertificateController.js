@@ -95,8 +95,11 @@ var self = (module.exports = {
 				s_name : req.body.s_name.trim(),
 				serial_no : req.body.serial_no.trim(),
 			}
+			const cmnIns = new CommonService();
+      let user_info = await cmnIns.get_loged_in_user_info(req);
+			let user_id = user_info.user_id;
 			const FindIns = new AdminCertificateService();
-			var findCerts = await FindIns.FindCertificateService(data);
+			var findCerts = await FindIns.FindCertificateService(data, user_id);
 			if(findCerts.status) {
 				res.json(findCerts);
 			} else {
@@ -148,8 +151,8 @@ var self = (module.exports = {
 			let certificate_id =  parseInt(req.params.id.trim());
 			// if(Number.isInteger(certificate_id)) {
 				const SingleCerIns = new AdminCertificateService();
-				var oldCert = await SingleCerIns.GetoldCertInfoByIdService(certificate_id);
-				
+				var oldCert = await SingleCerIns.GetoldCertInfoByIdService(user_info.user_id, certificate_id);
+				// console.log("oldCert = ", oldCert)
 				if(oldCert.status) {
 					//jodi user admin ba super admin hoy tahole edit korte parbe
 					if(user_info.user_type == '1' || user_info.user_type == '2') {
@@ -216,10 +219,15 @@ var self = (module.exports = {
 				// update_req_user_id: null,
 				update_request : 0
 			};
-
+			let serial_no	= req.body.serial_no.trim();
+			let id				= req.body.id.trim();
+			// console.log('update_data', update_data)
 			const AcertUpdateIns = new AdminCertificateService();
 			var isUpdateCert = await AcertUpdateIns.CertUpdateByIdService(update_data);
-			if(isUpdateCert.status) {				
+			// console.log('update_data', update_data)
+			if(isUpdateCert.status) {
+				//at a time have only a edit request stay
+				var updateBackupStatus = await AcertUpdateIns.updateBackupCertificateStatus(id, serial_no);
 				req.flash("sucMsg", 'Certificate information updated successfully.');
 				data.update_cert_info = update_data;
 				data.sucMsg = req.flash("sucMsg");
@@ -234,8 +242,65 @@ var self = (module.exports = {
 			console.log(err);
 			res.json(err);
 		}
-	}
+	},
 
+	CertCancelEditRequest : async function(req, res, next) {
+		try {
+			let certificate_id = req.body.id;
+			const cmnIns = new CommonService();
+      let user_info = await cmnIns.get_loged_in_user_info(req);
+			// console.log(user_info.user_id)
+			// res.json({status: true, sucMsg: "hello2222222"});
+			const EditReqCancelIns = new AdminCertificateService();
+			var editReqCancel = await EditReqCancelIns.CertEditReqCancelService(certificate_id, user_info.user_id);
+			if(editReqCancel.status) {
+				res.json(editReqCancel);
+			} else {
+				res.json(editReqCancel);
+			}
+		} catch(err) {
+			console.log(err);
+			res.json(err);
+		}
+	},
+	
+	AllowEditRequest : async function(req, res, next) {
+		try {
+			let certificate_id = req.body.id;
+			const cmnIns = new CommonService();
+      let user_info = await cmnIns.get_loged_in_user_info(req);
+			console.log(certificate_id)
+			const AllowEditReqIns = new AdminCertificateService();
+			var allow = await AllowEditReqIns.AllowEditReqService(certificate_id, user_info.user_id);
+			if(allow.status) {
+				res.json(allow);
+			} else {
+				res.json(allow);
+			}
+		} catch(err) {
+			console.log(err);
+			res.json(err);
+		}
+	},
+
+	IsAllowEditReqForCurrentUser : async function(req, res, next) {
+		try {
+			let certificate_id = req.body.id;
+			const cmnIns = new CommonService();
+      let user_info = await cmnIns.get_loged_in_user_info(req);
+			console.log(certificate_id)
+			const CheckEditReqIns = new AdminCertificateService();
+			var checkReq = await CheckEditReqIns.IsAllowEditReqForCurrentUserService(certificate_id, user_info.user_id);
+			if(checkReq.status) {
+				res.json(checkReq);
+			} else {
+				res.json(checkReq);
+			}
+		} catch(err) {
+			console.log(err);
+			res.json(err);
+		}
+	},
 
 	// CertificateRearrange : async function (req, res, next) {
 	// 	let name = req.body.name;
