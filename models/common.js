@@ -78,8 +78,8 @@ common.VerifyableCertNoForNotificationModel = async function VerifyableCertNoFor
 
 common.EditRequestCertNoForNotificationModel = async function EditRequestCertNoForNotificationModel() {
   return new Promise((resolve,reject)=>{
-    // db.query('SELECT COUNT(id) AS editable_no FROM new_old_bttc_certificates WHERE update_request != 0 AND update_req_user_id != ""', function(error, result, fields) {            
-    db.query('SELECT COUNT(id) AS editable_no FROM new_old_bttc_certificates WHERE update_request = 1', function(error, result, fields) {            
+    // db.query('SELECT COUNT(id) AS editable_no FROM new_old_nyttc_certificates WHERE update_request != 0 AND update_req_user_id != ""', function(error, result, fields) {            
+    db.query('SELECT COUNT(id) AS editable_no FROM new_old_nyttc_certificates WHERE update_request = 1', function(error, result, fields) {            
       if(error) {
         reject({ status: false, err: error });
       } else {

@@ -9,12 +9,13 @@ class SendMailService {
         // this.from = 'info@bttcedubd.com';
         // this.pass = 'info??1997bttcedubd';
 
-        this.from = 'info@nyttcedu.com';
-        this.pass = 'info@Training#12';
+        this.from = 'no-reply-auto-mail@nyttcedu.com';
+        this.pass = 'AmaroParanoJahaChay@123*321#TumiTai';
 
         this.transporter = nodemailer.createTransport({
             // service: 'gmail',
             host: 'bttcedubd.com',
+            // host: 'premium109.web-hosting.com',
             port: '465',
             secure: true, // true for 465, false for other ports
             auth: {
@@ -57,6 +58,7 @@ class SendMailService {
                                 '</head>'+
                                 '<body>' +
                                     '<h3>NYTTC Reset Password</h3>' +
+                                    '<h3>It is an auto generated mail please no reply or mail to this address.</h3>' +
                                     '<h4>Please Click The Button For Reset Password: <a class="reset" href="'+_current_url +'?useremail='+_useremail+'&token='+_token +'" target="_blank">Click Here</a></h4>' +
                                     '<br></br>'+
                                     '<h5>Thank you for using <a href="https://nyttcedu.com" target="_blank">NYTTC</a> system.</h5>' +

@@ -31,7 +31,7 @@ admin_certificate.SaveOldWayCertificateModel = async function SaveOldWayCertific
 
 admin_certificate.CertificateRearrangeModel = async function CertificateRearrangeModel() {
   return new Promise((resolve, reject) => {
-    db.query('SELECT * FROM old_bttc_certificates ORDER BY SerialNO ASC', function(error, result, fields) {
+    db.query('SELECT * FROM new_old_nyttc_certificates ORDER BY SerialNO ASC', function(error, result, fields) {
       if(error) {
         reject({ status: false, err: error });
       } else {        
@@ -94,7 +94,7 @@ admin_certificate.FoundCertificateModel = async function FoundCertificateModel(d
 admin_certificate.CertificateEditRequestModel = async function CertificateEditRequestModel(certificate_id, user_id) {
   return new Promise((resolve,reject)=>{
     // if no other update request pending
-    db.query('UPDATE new_old_bttc_certificates SET update_request = 1, update_req_user_id = ? WHERE id = ?', [user_id, certificate_id], function(error, result, fields) {
+    db.query('UPDATE new_old_nyttc_certificates SET update_request = 1, update_req_user_id = ? WHERE id = ?', [user_id, certificate_id], function(error, result, fields) {
       if(error) {
         reject({ status: false, err: error });
       } else {
@@ -120,7 +120,7 @@ admin_certificate.IsCertEditReqExistModel = async function IsCertEditReqExistMod
 admin_certificate.CertificateDataRecallAndInsetToBackupModel = async function CertificateDataRecallAndInsetToBackupModel(certificate_id, user_id) {
   return new Promise((resolve,reject)=>{
     // Backup Update data
-    db.query('SELECT * FROM new_old_bttc_certificates WHERE id = ? ', [certificate_id], function(error, result, fields) {            
+    db.query('SELECT * FROM new_old_nyttc_certificates WHERE id = ? ', [certificate_id], function(error, result, fields) {            
       if(error) {
         reject({ status: false, err: error });
       } else {
@@ -140,7 +140,7 @@ admin_certificate.CertificateDataRecallAndInsetToBackupModel = async function Ce
 
 admin_certificate.GetoldCertInfoByIdModel = async function GetoldCertInfoByIdModel(user_id, certificate_id) {
   return new Promise((resolve, reject)=>{
-      db.query('SELECT * FROM new_old_bttc_certificates WHERE (update_request = 1 OR update_request = 2) AND id = ?', [certificate_id], function(error, result, fields) {            
+      db.query('SELECT * FROM new_old_nyttc_certificates WHERE (update_request = 1 OR update_request = 2) AND id = ?', [certificate_id], function(error, result, fields) {            
           if(error) {
               reject({ status: false, err: error });
           } else {
@@ -176,7 +176,7 @@ admin_certificate.updateBackupCertificateStatusModel = async function updateBack
 
 admin_certificate.CheckCertUpdatePermissionModel = async function CheckCertUpdatePermissionModel(certificate_id, user_id) {
   return new Promise((resolve, reject)=>{
-      db.query('SELECT * FROM new_old_bttc_certificates WHERE (update_request = 1 OR update_request = 2) AND update_req_user_id = ? AND id = ?', [user_id, certificate_id], function(error, result, fields) {            
+      db.query('SELECT * FROM new_old_nyttc_certificates WHERE (update_request = 1 OR update_request = 2) AND update_req_user_id = ? AND id = ?', [user_id, certificate_id], function(error, result, fields) {            
           if(error) {
               reject({ status: false, err: error });
           } else {
@@ -188,7 +188,7 @@ admin_certificate.CheckCertUpdatePermissionModel = async function CheckCertUpdat
 
 admin_certificate.CertEditReqCancelModel = async function CertEditReqCancelModel(certificate_id, user_id) {
   return new Promise((resolve, reject)=>{
-      db.query('UPDATE new_old_bttc_certificates SET update_request = "3", updated_by = ? WHERE id = ?', [user_id, certificate_id], function(error, result, fields) {            
+      db.query('UPDATE new_old_nyttc_certificates SET update_request = "3", updated_by = ? WHERE id = ?', [user_id, certificate_id], function(error, result, fields) {            
           if(error) {
               reject({ status: false, err: error });
           } else {
@@ -200,7 +200,7 @@ admin_certificate.CertEditReqCancelModel = async function CertEditReqCancelModel
 
 admin_certificate.AllowEditReqModel = async function AllowEditReqModel(certificate_id, user_id) {
   return new Promise((resolve, reject)=>{
-      db.query('UPDATE new_old_bttc_certificates SET update_request = "2", updated_by = ? WHERE id = ?', [user_id, certificate_id], function(error, result, fields) {            
+      db.query('UPDATE new_old_nyttc_certificates SET update_request = "2", updated_by = ? WHERE id = ?', [user_id, certificate_id], function(error, result, fields) {            
           if(error) {
               reject({ status: false, err: error });
           } else {
@@ -212,7 +212,7 @@ admin_certificate.AllowEditReqModel = async function AllowEditReqModel(certifica
 
 admin_certificate.IsAllowEditReqForCurrentUserModel = async function IsAllowEditReqForCurrentUserModel(certificate_id, user_id) {
   return new Promise((resolve, reject)=>{
-      db.query('SELECT * FROM new_old_bttc_certificates WHERE update_request = "2" AND update_req_user_id = ? AND id = ?', [user_id, certificate_id], function(error, result, fields) {            
+      db.query('SELECT * FROM new_old_nyttc_certificates WHERE update_request = "2" AND update_req_user_id = ? AND id = ?', [user_id, certificate_id], function(error, result, fields) {            
           if(error) {
               reject({ status: false, err: error });
           } else {

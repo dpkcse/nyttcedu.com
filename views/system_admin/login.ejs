@@ -50,18 +50,18 @@
                                     </a>
                                 </div>
                                 <div class="p-2">
-                                    <form action="/admin-login" method="post" class="form-horizontal">
+                                    <form action="/admin-login" method="post" class="form-horizontal" autocomplete="off">
                                         <%- include('./system_layouts/s_message') %>
                                         
                                         <div class="form-group">
                                             <label for="username">Username</label>
-                                            <input type="text" name="email" class="form-control" id="username" placeholder="Enter username" value="">
+                                            <input type="text" name="email" class="form-control" id="username" placeholder="Enter username" value="" autocomplete="off">
                                         </div>
                 
                                         <div class="form-group">
                                             <label for="userpassword">Password</label>
-                                            <!-- <input type="password" name="password" class="form-control" id="userpassword" placeholder="Enter password" value="BAP@log=in15okSystem"> -->
-                                            <input type="password" name="password" class="form-control" id="userpassword" placeholder="Enter password" value="123456">
+                                            <!-- <input type="password" name="password" class="form-control" id="userpassword" placeholder="Enter password" value=""> -->
+                                            <input type="password" name="password" class="form-control" id="userpassword" placeholder="Enter password" value="" autocomplete="off">
                                         </div>
                 
                                         <div class="custom-control custom-checkbox">
@@ -101,6 +101,10 @@
             //         $('.alert').fadeOut('3000');
             //     }
             // }, 3000);
+            $("#username").val("0").val("").trigger("input");
+            $("#userpassword").val("0").val("").trigger("input");
+            
+
         </script>
         <script>
             // After logout Back button click go dashboard stop code it is
