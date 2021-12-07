@@ -1,0 +1,7 @@
+DATABASE bttcupey_nyttc_edu
+
+DB_HOST localhost
+
+DB_PASS WNFYvgbYx,hu
+
+DB_USER bttcupey_nyttcedu
