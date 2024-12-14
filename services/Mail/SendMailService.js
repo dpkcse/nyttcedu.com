@@ -14,8 +14,8 @@ class SendMailService {
 
         this.transporter = nodemailer.createTransport({
             // service: 'gmail',
-            host: 'bttcedubd.com',
-            // host: 'premium109.web-hosting.com',
+            host: 'server305.web-hosting.com',
+            // host: 'nyttcedu.com',
             port: '465',
             secure: true, // true for 465, false for other ports
             auth: {

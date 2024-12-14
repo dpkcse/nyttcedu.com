@@ -26,7 +26,7 @@ var self = (module.exports = {
 				subject: req.body.subject.trim(),
 				message: req.body.message.trim(),
 			};
-			
+					
       const ContactIns = new ContactService();
       var sendSaveMsg = await ContactIns.SaveAndSendMsgService(data);
 			if(sendSaveMsg.status) {

@@ -24,7 +24,7 @@ module.exports = function (passport) {
           });
         } else {
           if (result.length == 1) {
-
+            
             bcrypt.compare(password, result[0].password, (err, isMatch) => {
               if (err) throw err;
               if (isMatch) { //return true or false

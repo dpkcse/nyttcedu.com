@@ -2,7 +2,7 @@ $(function() {
     "use strict";
 
 	//Loader	
-		$(function preloaderLoad() {
+	$(function preloaderLoad() {
         if($('.preloader').length){
             $('.preloader').delay(200).fadeOut(300);
         }
