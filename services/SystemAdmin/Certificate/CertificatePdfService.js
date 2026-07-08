@@ -8,9 +8,9 @@ const GENERATED_DIR = path.join(process.cwd(), 'public', 'uploads', 'certificate
 const PUBLIC_GENERATED_DIR = '/uploads/certificates/generated';
 
 const CERTIFICATE_POSITIONS = {
-  serialNo: { xRatio: 0.70, yRatio: 0.90, size: 12 },
-  regNo: { xRatio: 0.16, yRatio: 0.84, size: 11 },
-  session: { xRatio: 0.74, yRatio: 0.84, size: 11 },
+  serialNo: { xRatio: 0.14, yRatio: 0.84, size: 12 },
+  regNo: { xRatio: 0.68, yRatio: 0.84, size: 11 },
+  session: { xRatio: 0.68, yRatio: 0.80, size: 11 },
   studentName: { xRatio: 0.30, yRatio: 0.67, size: 16 },
   fatherName: { xRatio: 0.30, yRatio: 0.61, size: 12 },
   motherName: { xRatio: 0.30, yRatio: 0.56, size: 12 },
