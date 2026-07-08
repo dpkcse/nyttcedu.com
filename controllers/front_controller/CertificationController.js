@@ -15,6 +15,25 @@ var self = (module.exports = {
 		}
 	},
 
+
+	VerifyCertificateBySerial : async function (req, res, next) {
+		try {
+			let serial_no = String(req.params.serial_no || '').trim();
+			const CertificationIns = new CertificationService();
+			var certificate = await CertificationIns.GetResultInfoBySerialService(serial_no);
+			let data = {
+				title : 'Certificate Verification',
+				moment: moment,
+				certificate: certificate.status ? certificate.result : null,
+				errMsg: certificate.status ? '' : 'Certificate not found or not approved'
+			};
+			res.render('front_view/certificate_verify_result', data);
+		} catch ( err ) {
+			console.log( err );
+			res.status( 500 ).json( err );
+		}
+	},
+
 	SearchCertificateInfo : async function (req, res, next) {
 		try {
 			let serial_no = req.body.serial_no.trim();

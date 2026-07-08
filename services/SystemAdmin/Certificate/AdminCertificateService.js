@@ -2,7 +2,6 @@ var _ = require("lodash");
 var moment = require('moment');
 var adminCertiModels = require("../../../models/system_admin/admin_certificate");
 var commonModels = require("../../../models/common");
-const { result } = require("lodash");
 
 class AdminCertificateService {
     constructor() {
@@ -80,6 +79,8 @@ class AdminCertificateService {
                 received_date: v.received_date == null ? 'No' :moment(v.received_date).format('L'),
                 update_request: v.update_request,
                 update_btn_is_enable: (user_id == v.update_req_user_id) ? '' : ((v.update_request == 1 || v.update_request == 2) ? 'disabled' : ''),
+                certificate_pdf_path: v.certificate_pdf_path || '',
+                is_generated: v.is_generated == 1 ? 'Yes' : 'No',
               });
             });
             // console.log('ss', certificates)
@@ -319,6 +320,48 @@ class AdminCertificateService {
           status: false,
           errMsg: err
         }
+      }
+    }
+
+    async GenerateCertificatePdfService(certificate_id, user_id) {
+      try {
+        const id = parseInt(certificate_id, 10);
+        if(!Number.isInteger(id) || id <= 0) {
+          return { status: false, errMsg: 'Invalid certificate id.' };
+        }
+
+        const certInfo = await this.AC_MODELS.GetApprovedCertificateByIdModel(id);
+        if(!certInfo.status || certInfo.result.length !== 1) {
+          return { status: false, errMsg: 'Please approve this certificate before generating PDF.' };
+        }
+
+        const CertificatePdfService = require('./CertificatePdfService');
+        const generated = await CertificatePdfService.generate(certInfo.result[0]);
+        const updateData = {
+          certificate_pdf_path: generated.publicPath,
+          qr_code_path: generated.qrCodePath,
+          generated_at: moment().format('YYYY-MM-DD HH:mm:ss'),
+          generated_by: user_id,
+          is_generated: 1,
+          issue_date: certInfo.result[0].issue_date || moment().format('YYYY-MM-DD'),
+          is_print: 1,
+        };
+        const saved = await this.AC_MODELS.UpdateGeneratedCertificateModel(id, updateData);
+        if(saved.status && saved.result.affectedRows === 1) {
+          return {
+            status: true,
+            sucMsg: 'Certificate PDF generated successfully.',
+            result: {
+              certificate_pdf_path: generated.publicPath,
+              qr_code_path: generated.qrCodePath,
+              verification_url: generated.verificationUrl,
+            }
+          };
+        }
+        return { status: false, errMsg: 'Certificate PDF generated but database was not updated.' };
+      } catch(err) {
+        console.log(err);
+        return { status: false, errMsg: err.message || err };
       }
     }
 

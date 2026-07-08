@@ -30,7 +30,7 @@ var self = (module.exports = {
 	},
 
 	SaveCertificateOldWay : async function (req, res, next) {
-		try {			
+		try {
 			let postData = {
 				s_name: req.body.name.trim(),
 				f_name: req.body.fathers_name.trim(),
@@ -110,7 +110,7 @@ var self = (module.exports = {
 			res.json(err);
 		}
 	},
-	
+
 	CertificateEditRequest : async function(req, res, next) {
 		try {
 			let certificate_id = req.body.id;
@@ -147,7 +147,7 @@ var self = (module.exports = {
 				sucMsg: req.flash('sucMsg'),
 				errMsg: req.flash('errMsg')
 			};
-			
+
 			let certificate_id =  parseInt(req.params.id.trim());
 			// if(Number.isInteger(certificate_id)) {
 				const SingleCerIns = new AdminCertificateService();
@@ -237,7 +237,7 @@ var self = (module.exports = {
 				data.errMsg = req.flash("errMsg");
 				// redirect korte hoibe
 				res.render('system_admin/certificate/update_certificate_old_way', data);
-			}			
+			}
 		} catch(err) {
 			console.log(err);
 			res.json(err);
@@ -263,7 +263,7 @@ var self = (module.exports = {
 			res.json(err);
 		}
 	},
-	
+
 	AllowEditRequest : async function(req, res, next) {
 		try {
 			let certificate_id = req.body.id;
@@ -299,6 +299,20 @@ var self = (module.exports = {
 		} catch(err) {
 			console.log(err);
 			res.json(err);
+		}
+	},
+
+
+	GenerateCertificatePdf : async function(req, res, next) {
+		try {
+			const cmnIns = new CommonService();
+      let user_info = await cmnIns.get_loged_in_user_info(req);
+			const GenerateIns = new AdminCertificateService();
+			const generated = await GenerateIns.GenerateCertificatePdfService(req.body.id, user_info.user_id);
+			res.json(generated);
+		} catch(err) {
+			console.log(err);
+			res.json({ status: false, errMsg: 'Unable to generate certificate PDF.' });
 		}
 	},
 
