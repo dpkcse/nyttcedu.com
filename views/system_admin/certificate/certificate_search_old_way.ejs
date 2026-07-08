@@ -168,7 +168,8 @@
 										// 	'<input class="btn btn-success btn-sm" type="submit" value="Edit Request" />'+
 										// '</form>'+
 										'<input type="button" class="btn btn-success btn-sm edit_cert_req" id="find_cert_'+v.id+'" data-id="'+v.id+'" value="Edit Request" '+ v.update_btn_is_enable+' title="' + ((v.update_request == 1 || v.update_request == 2)? 'Already have a edit request!':'') + '"/>'+
-										'<button class="btn btn-primary btn-sm ml-1" data-id="'+v.id+'">Certificate View</button>'+
+										'<button class="btn btn-primary btn-sm ml-1 generate_certificate_pdf" data-id="'+v.id+'" '+(v.is_approved == 'Yes' ? '' : 'disabled')+' title="'+(v.is_approved == 'Yes' ? 'Generate certificate PDF' : 'Please approve this certificate before generating PDF.')+'">'+(v.is_generated == 'Yes' ? 'Regenerate Certificate' : 'Generate Certificate')+'</button>'+
+										(v.certificate_pdf_path ? '<a class="btn btn-info btn-sm ml-1" target="_blank" href="'+v.certificate_pdf_path+'">View</a><a class="btn btn-secondary btn-sm ml-1" download href="'+v.certificate_pdf_path+'">Download</a>' : '')+
 									'</td>'+									
 								'</tr>';
 							// );
@@ -250,7 +251,40 @@
 	});
 
 
-  $(document).on('click', '#send_update_certificate_req', function(event) {
+	$(document).on('click', '.generate_certificate_pdf', function(e) {
+		msg_no++;
+		let id = $(this).attr('data-id').trim();
+		let button = $(this);
+		if(id) {
+			button.prop('disabled', true).text('Generating...');
+			$.ajax({
+				url: "/certificate/generate-pdf",
+				cache: false,
+				type: "POST",
+				data: { id: id },
+				success: function(res) {
+					if(res.status) {
+						$('.message-show').append('<div id="msg_'+msg_no+'" class="alert alert-success alert-dismissable"><button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+res.sucMsg+'</div>');
+						button.text('Regenerate Certificate').prop('disabled', false);
+						if(res.result && res.result.certificate_pdf_path) {
+							button.after('<a class="btn btn-info btn-sm ml-1" target="_blank" href="'+res.result.certificate_pdf_path+'">View</a><a class="btn btn-secondary btn-sm ml-1" download href="'+res.result.certificate_pdf_path+'">Download</a>');
+						}
+					} else {
+						$('.message-show').append('<div id="msg_'+msg_no+'" class="alert alert-danger alert-dismissable"><button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>'+res.errMsg+'</div>');
+						button.prop('disabled', false).text('Generate Certificate');
+					}
+					hide_msg('#msg_'+msg_no);
+				},
+				error: function() {
+					$('.message-show').append('<div id="msg_'+msg_no+'" class="alert alert-danger alert-dismissable"><button aria-hidden="true" class="close" data-dismiss="alert" type="button">×</button>Unable to generate certificate PDF.</div>');
+					button.prop('disabled', false).text('Generate Certificate');
+					hide_msg('#msg_'+msg_no);
+				}
+			});
+		}
+	});
+
+  $(document).on('click', '#send_update_certificate_req' , function(event) {
     msg_no++;
 		let id = $(this).attr('data-id').trim();
     if(id) {

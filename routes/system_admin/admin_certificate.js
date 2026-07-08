@@ -16,6 +16,7 @@ router.post('/edit-request', ensureAuthenticated, AdminCertificateController.Cer
 router.post('/cancel-edit-request', ensureAuthenticated, AdminCertificateController.CertCancelEditRequest);
 router.post('/allow-edit-request', ensureAuthenticated, AdminCertificateController.AllowEditRequest);
 router.post('/allow-edit-request-check-for-current-user', ensureAuthenticated, AdminCertificateController.IsAllowEditReqForCurrentUser);
+router.post('/generate-pdf', ensureAuthenticated, AdminCertificateController.GenerateCertificatePdf);
 
 router.get('/update-certificate-old-way/:id', ensureAuthenticated, AdminCertificateController.UpdateCertOldWayGet);
 router.post('/update-certificate-old-way', ensureAuthenticated, AdminCertificateController.UpdateCertOldWayPost);

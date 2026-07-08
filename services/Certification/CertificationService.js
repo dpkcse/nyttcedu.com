@@ -8,6 +8,13 @@ class CertificationService {
 
     async GetResultInfoBySerialService(serial_no) {
       try {
+        serial_no = String(serial_no || '').trim();
+        if(!/^[a-zA-Z0-9_-]{1,50}$/.test(serial_no)) {
+          return {
+            status: false,
+            err: 'Certificate not found or not approved'
+          }
+        }
         const certInfo = await certification_models.GetResultInfoBySerialModel(serial_no);
         if(certInfo.status && certInfo.result.length == 1) {
             let data = {
@@ -19,6 +26,7 @@ class CertificationService {
               result: certInfo.result[0].result,
               serial_no: certInfo.result[0].serial_no,
               session: certInfo.result[0].session,
+              issue_date: certInfo.result[0].issue_date,
               is_approved: certInfo.result[0].is_approved
             }
             if(data.is_approved == '1') {
@@ -29,13 +37,13 @@ class CertificationService {
             } else {
               return {
                 status: false,
-                err: 'Unable To Tiew Result.'
+                err: 'Certificate not found or not approved'
               }
             }            
         } else {
           return {
             status: false,
-            err: 'Result Not Found.'
+            err: 'Certificate not found or not approved'
           }
         }
       } catch(err) {

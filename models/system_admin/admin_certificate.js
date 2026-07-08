@@ -66,9 +66,8 @@ admin_certificate.CertificateRearrangeModel = async function CertificateRearrang
 admin_certificate.FoundCertificateModel = async function FoundCertificateModel(data) {
   return new Promise((resolve,reject)=>{
     if(data.s_name != '') {
-      let sql = 'SELECT * FROM new_old_nyttc_certificates WHERE s_name LIKE "%'+data.s_name+'%"';
-      // console.log(sql)
-      db.query(sql, [data.s_name], function(error, result, fields) {
+      let sql = 'SELECT * FROM new_old_nyttc_certificates WHERE s_name LIKE ?';
+      db.query(sql, ['%' + data.s_name + '%'], function(error, result, fields) {
         if(error) {
           reject({ status: false, err: error });
         } else {
@@ -219,6 +218,31 @@ admin_certificate.IsAllowEditReqForCurrentUserModel = async function IsAllowEdit
               resolve({ status: true, result: result});
           }
       });
+  });
+}
+
+
+admin_certificate.GetApprovedCertificateByIdModel = async function GetApprovedCertificateByIdModel(certificate_id) {
+  return new Promise((resolve, reject)=>{
+    db.query('SELECT * FROM new_old_nyttc_certificates WHERE id = ? AND is_approved = 1', [certificate_id], function(error, result, fields) {
+      if(error) {
+        reject({ status: false, err: error });
+      } else {
+        resolve({ status: true, result: result});
+      }
+    });
+  });
+}
+
+admin_certificate.UpdateGeneratedCertificateModel = async function UpdateGeneratedCertificateModel(certificate_id, data) {
+  return new Promise((resolve, reject)=>{
+    db.query('UPDATE new_old_nyttc_certificates SET ? WHERE id = ? AND is_approved = 1', [data, certificate_id], function(error, result, fields) {
+      if(error) {
+        reject({ status: false, err: error });
+      } else {
+        resolve({ status: true, result: result});
+      }
+    });
   });
 }
 

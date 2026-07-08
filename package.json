@@ -32,7 +32,9 @@
     "passport-local": "^1.0.0",
     "pm2": "^4.5.1",
     "rand-token": "^1.0.1",
-    "terminal-link": "^2.1.1"
+    "terminal-link": "^2.1.1",
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "nodemon": "^2.0.22",
