@@ -61,8 +61,13 @@
 			<div class="card">
 				<div class="card-body">
 					<h4 class="card-title">Search Results</h4>
+					<div class="alert alert-info mb-3">
+						<h5 class="alert-heading mb-1">Certificate PDF Generation</h5>
+						<p class="mb-1">Search an approved certificate, then click Generate Certificate. After generation, View and Download buttons will appear.</p>
+						<strong>Only approved certificates can be generated.</strong>
+					</div>
 					<p class="card-title-desc">
-						In here, showing found certificate Information lists.
+						In here, showing found certificate Information lists. Search by Serial No or Student Name to generate a certificate.
 					</p>	
 					<table id="datatable-sc-result" class="table table-striped table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
 						<thead>
@@ -119,6 +124,45 @@
 	});
 	
 	var msg_no = 0;
+
+	function certificateBadge(text, className) {
+		return '<span class="badge '+className+'">'+text+'</span>';
+	}
+
+	function buildApprovedBadge(value) {
+		return value == 'Yes' ? certificateBadge('Approved', 'badge-success') : certificateBadge('Pending', 'badge-warning');
+	}
+
+	function buildGeneratedBadge(value) {
+		return value == 'Yes' ? certificateBadge('Generated', 'badge-success') : certificateBadge('Not Generated', 'badge-secondary');
+	}
+
+	function buildCertificateAction(v) {
+		var editButton = '<input type="button" class="btn btn-success btn-sm edit_cert_req mb-1" id="find_cert_'+v.id+'" data-id="'+v.id+'" value="Edit Request" '+ v.update_btn_is_enable+' title="' + ((v.update_request == 1 || v.update_request == 2)? 'Already have a edit request!':'') + '"/>';
+		var generationAction = '';
+		if(v.is_approved == 'Yes') {
+			if(v.is_generated == 'Yes' && v.certificate_pdf_path) {
+				generationAction =
+					'<a class="btn btn-info btn-sm ml-1 mb-1" target="_blank" href="'+v.certificate_pdf_path+'">View PDF</a>'+
+					'<a class="btn btn-success btn-sm ml-1 mb-1" download href="'+v.certificate_pdf_path+'">Download</a>'+
+					'<form method="POST" action="/certificate/generate-pdf" style="display:inline-block;" class="ml-1 mb-1">'+
+						'<input type="hidden" name="certificate_id" value="'+v.id+'">'+
+						'<input type="hidden" name="regenerate" value="1">'+
+						'<button type="submit" class="btn btn-sm btn-warning" onclick="return confirm(\'Are you sure you want to regenerate this certificate?\');">Regenerate</button>'+
+					'</form>';
+			} else {
+				generationAction =
+					'<form method="POST" action="/certificate/generate-pdf" style="display:inline-block;" class="ml-1 mb-1">'+
+						'<input type="hidden" name="certificate_id" value="'+v.id+'">'+
+						'<button type="submit" class="btn btn-sm btn-primary">Generate Certificate</button>'+
+					'</form>';
+			}
+		} else {
+			generationAction = '<div class="ml-1 d-inline-block align-top"><span class="badge badge-warning">Pending Approval</span><button type="button" class="btn btn-sm btn-secondary ml-1" disabled>Generate Disabled</button><small class="text-muted d-block">Approve this certificate before generating PDF.</small></div>';
+		}
+		return editButton + generationAction;
+	}
+
 	$(document).on('click', '#certSearchBtn', function(event) {
     msg_no++;
     let s_name = $('#student_name').val();
@@ -157,20 +201,12 @@
 									'<td>'+ v.session +'</td>'+
 									'<td>'+ v.passing_year +'</td>'+
 									'<td>'+ v.result +'</td>'+
-									'<td>'+ v.is_approved +'</td>'+
+									'<td>'+ buildApprovedBadge(v.is_approved) +'</td>'+
 									'<td>'+ v.is_insert_or_update +'</td>'+
-									'<td>'+ v.is_print +'</td>'+
+									'<td>'+ buildGeneratedBadge(v.is_generated) +'</td>'+
 									'<td>'+ v.is_received +'</td>'+
 									'<td>'+ v.received_date +'</td>'+
-									'<td>'+
-										// '<form method="post" action="#">'+
-										// 	'<input type="hidden" name="certificate_id" value="'+v.id+'" />'+
-										// 	'<input class="btn btn-success btn-sm" type="submit" value="Edit Request" />'+
-										// '</form>'+
-										'<input type="button" class="btn btn-success btn-sm edit_cert_req" id="find_cert_'+v.id+'" data-id="'+v.id+'" value="Edit Request" '+ v.update_btn_is_enable+' title="' + ((v.update_request == 1 || v.update_request == 2)? 'Already have a edit request!':'') + '"/>'+
-										'<button class="btn btn-primary btn-sm ml-1 generate_certificate_pdf" data-id="'+v.id+'" '+(v.is_approved == 'Yes' ? '' : 'disabled')+' title="'+(v.is_approved == 'Yes' ? 'Generate certificate PDF' : 'Please approve this certificate before generating PDF.')+'">'+(v.is_generated == 'Yes' ? 'Regenerate Certificate' : 'Generate Certificate')+'</button>'+
-										(v.certificate_pdf_path ? '<a class="btn btn-info btn-sm ml-1" target="_blank" href="'+v.certificate_pdf_path+'">View</a><a class="btn btn-secondary btn-sm ml-1" download href="'+v.certificate_pdf_path+'">Download</a>' : '')+
-									'</td>'+									
+									'<td>'+ buildCertificateAction(v) +'</td>'+									
 								'</tr>';
 							// );
             });
