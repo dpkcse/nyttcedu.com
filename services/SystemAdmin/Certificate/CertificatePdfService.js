@@ -7,59 +7,73 @@ const TEMPLATE_PATH = process.env.CERTIFICATE_TEMPLATE_PATH || path.join(process
 const GENERATED_DIR = path.join(process.cwd(), 'public', 'uploads', 'certificates', 'generated');
 const PUBLIC_GENERATED_DIR = '/uploads/certificates/generated';
 
+const BASE_LAYOUT_SIZE = { width: 1100, height: 520 };
+
 const CERTIFICATE_TEXT_LAYOUT = {
-  serialValue: { xRatio: 0.145, yRatio: 0.795, size: 12 },
-  regLabel: { xRatio: 0.675, yRatio: 0.785, size: 12 },
-  regValue: { xRatio: 0.755, yRatio: 0.785, size: 12 },
-  sessionLabel: { xRatio: 0.675, yRatio: 0.750, size: 12 },
-  sessionValue: { xRatio: 0.755, yRatio: 0.750, size: 12, maxWidthRatio: 0.22 },
+  serialValue: { x: 145, y: 410, size: 12 },
 
-  line1Label: { xRatio: 0.225, yRatio: 0.635, size: 14 },
-  studentName: { xRatio: 0.395, yRatio: 0.635, size: 15, maxWidthRatio: 0.46 },
-  line2Label: { xRatio: 0.225, yRatio: 0.585, size: 14 },
-  fatherName: { xRatio: 0.365, yRatio: 0.585, size: 14, maxWidthRatio: 0.46 },
-  fatherTag: { xRatio: 0.820, yRatio: 0.585, size: 13 },
-  line3Label: { xRatio: 0.225, yRatio: 0.535, size: 14 },
-  motherName: { xRatio: 0.285, yRatio: 0.535, size: 14, maxWidthRatio: 0.54 },
-  motherTag: { xRatio: 0.820, yRatio: 0.535, size: 13 },
-  line4Label: { xRatio: 0.225, yRatio: 0.485, size: 14 },
-  instituteName: { xRatio: 0.260, yRatio: 0.485, size: 14, maxWidthRatio: 0.64 },
+  regLabel: { x: 700, y: 390, size: 12 },
+  regValue: { x: 770, y: 390, size: 12, maxWidth: 180 },
+  sessionLabel: { x: 700, y: 365, size: 12 },
+  sessionValue: { x: 770, y: 365, size: 12, maxWidth: 245 },
 
-  rollLabel: { xRatio: 0.225, yRatio: 0.425, size: 14 },
-  rollValue: { xRatio: 0.345, yRatio: 0.425, size: 14, maxWidthRatio: 0.10 },
-  passedText: { xRatio: 0.455, yRatio: 0.425, size: 14 },
-  courseTitle: { xRatio: 0.640, yRatio: 0.425, size: 14, maxWidthRatio: 0.26 },
+  line1Label: { x: 250, y: 315, size: 14 },
+  studentName: { x: 410, y: 315, size: 14, maxWidth: 500 },
 
-  examLabel: { xRatio: 0.225, yRatio: 0.375, size: 14 },
-  examMonth: { xRatio: 0.520, yRatio: 0.375, size: 14, maxWidthRatio: 0.14 },
-  resultLabel: { xRatio: 0.650, yRatio: 0.375, size: 14 },
-  resultValue: { xRatio: 0.855, yRatio: 0.375, size: 14, maxWidthRatio: 0.08 },
+  line2Label: { x: 250, y: 285, size: 14 },
+  fatherName: { x: 395, y: 285, size: 14, maxWidth: 520 },
+  fatherTag: { x: 950, y: 285, size: 13 },
 
-  scaleLine: { xRatio: 0.225, yRatio: 0.325, size: 13, maxWidthRatio: 0.68 },
-  passportLabel: { xRatio: 0.225, yRatio: 0.275, size: 13 },
-  passportValue: { xRatio: 0.675, yRatio: 0.275, size: 13, maxWidthRatio: 0.22 },
-  issueDateLabel: { xRatio: 0.095, yRatio: 0.125, size: 12 },
-  issueDateValue: { xRatio: 0.190, yRatio: 0.125, size: 12, maxWidthRatio: 0.18 },
-  qrCode: { xRatio: 0.466, yRatio: 0.090, width: 80, height: 80 },
+  line3Label: { x: 250, y: 255, size: 14 },
+  motherName: { x: 395, y: 255, size: 14, maxWidth: 520 },
+  motherTag: { x: 950, y: 255, size: 13 },
+
+  line4Label: { x: 250, y: 225, size: 14 },
+  instituteName: { x: 395, y: 225, size: 14, maxWidth: 560 },
+
+  rollLabel: { x: 250, y: 190, size: 14 },
+  rollValue: { x: 365, y: 190, size: 14, maxWidth: 115 },
+  durationText: { x: 485, y: 190, size: 14 },
+  courseTitle: { x: 690, y: 190, size: 14, maxWidth: 330 },
+
+  examLabel: { x: 250, y: 160, size: 14 },
+  examMonth: { x: 590, y: 160, size: 14, maxWidth: 125 },
+  resultLabel: { x: 735, y: 160, size: 14 },
+  resultValue: { x: 945, y: 160, size: 14, maxWidth: 80 },
+
+  scaleLine: { x: 250, y: 130, size: 13, maxWidth: 760 },
+
+  passportLabel: { x: 250, y: 100, size: 13 },
+  passportValue: { x: 720, y: 100, size: 13, maxWidth: 240 },
+
+  issueDateLabel: { x: 85, y: 65, size: 12 },
+  issueDateValue: { x: 165, y: 65, size: 12, maxWidth: 190 },
+
+  qrCode: { x: 520, y: 45, width: 85, height: 85 },
 };
-
-const DOTTED_LINES = [
-  { x1Ratio: 0.390, yRatio: 0.628, x2Ratio: 0.845 },
-  { x1Ratio: 0.360, yRatio: 0.578, x2Ratio: 0.805 },
-  { x1Ratio: 0.280, yRatio: 0.528, x2Ratio: 0.805 },
-  { x1Ratio: 0.255, yRatio: 0.478, x2Ratio: 0.900 },
-  { x1Ratio: 0.340, yRatio: 0.418, x2Ratio: 0.905 },
-  { x1Ratio: 0.515, yRatio: 0.368, x2Ratio: 0.905 },
-  { x1Ratio: 0.670, yRatio: 0.268, x2Ratio: 0.905 },
-];
 
 function clean(value) {
   return value === null || value === undefined || String(value).trim() === '' ? 'N/A' : String(value).trim();
 }
 
-function toPoint(page, position) {
+function layoutScale(page) {
   const { width, height } = page.getSize();
-  return { x: position.xRatio * width, y: position.yRatio * height };
+  return { x: width / BASE_LAYOUT_SIZE.width, y: height / BASE_LAYOUT_SIZE.height };
+}
+
+function toPoint(page, position) {
+  const scale = layoutScale(page);
+  return { x: position.x * scale.x, y: position.y * scale.y };
+}
+
+function scaledSize(page, position) {
+  const scale = layoutScale(page);
+  return position.size * Math.min(scale.x, scale.y);
+}
+
+function scaledMaxWidth(page, position, fallback) {
+  const scale = layoutScale(page);
+  return position.maxWidth ? position.maxWidth * scale.x : fallback;
 }
 
 function truncateText(text, font, size, maxWidth) {
@@ -73,9 +87,8 @@ function truncateText(text, font, size, maxWidth) {
 }
 
 function drawTextFit(page, font, position, text, options = {}) {
-  const { width } = page.getSize();
-  const maxWidth = position.maxWidthRatio ? position.maxWidthRatio * width : options.maxWidth;
-  let size = position.size;
+  const maxWidth = scaledMaxWidth(page, position, options.maxWidth);
+  let size = scaledSize(page, position);
   let fitted = clean(text);
   while (maxWidth && size > 10 && font.widthOfTextAtSize(fitted, size) > maxWidth) size -= 0.5;
   fitted = truncateText(fitted, font, size, maxWidth);
@@ -83,23 +96,15 @@ function drawTextFit(page, font, position, text, options = {}) {
     ...toPoint(page, position),
     size,
     font,
-    color: rgb(0.08, 0.08, 0.08),
+    color: rgb(0, 0, 0),
     maxWidth,
   });
 }
 
-function drawDottedLines(page) {
-  const { width, height } = page.getSize();
-  DOTTED_LINES.forEach((line) => {
-    page.drawLine({
-      start: { x: line.x1Ratio * width, y: line.yRatio * height },
-      end: { x: line.x2Ratio * width, y: line.yRatio * height },
-      thickness: 0.6,
-      color: rgb(0.18, 0.18, 0.18),
-      dashArray: [1, 3],
-      dashPhase: 0,
-    });
-  });
+function getLandscapePageSize(embeddedPage) {
+  const width = Math.max(embeddedPage.width, embeddedPage.height);
+  const height = Math.min(embeddedPage.width, embeddedPage.height);
+  return { width, height };
 }
 
 class CertificatePdfService {
@@ -115,12 +120,14 @@ class CertificatePdfService {
     await fs.promises.mkdir(GENERATED_DIR, { recursive: true });
     const qr = await CertificateQrService.generate(safeSerial);
     const templateBytes = await fs.promises.readFile(TEMPLATE_PATH);
-    const pdfDoc = await PDFDocument.load(templateBytes);
-    const page = pdfDoc.getPages()[0];
+    const pdfDoc = await PDFDocument.create();
+    const [templatePage] = await pdfDoc.embedPdf(templateBytes, [0]);
+    const pageSize = getLandscapePageSize(templatePage);
+    const page = pdfDoc.addPage([pageSize.width, pageSize.height]);
+    page.drawPage(templatePage, { x: 0, y: 0, width: pageSize.width, height: pageSize.height });
+
     const bodyFont = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
     const valueFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBoldItalic);
-
-    drawDottedLines(page);
 
     drawTextFit(page, valueFont, CERTIFICATE_TEXT_LAYOUT.serialValue, safeSerial);
     drawTextFit(page, bodyFont, CERTIFICATE_TEXT_LAYOUT.regLabel, 'Reg. No :');
@@ -141,7 +148,7 @@ class CertificatePdfService {
 
     drawTextFit(page, bodyFont, CERTIFICATE_TEXT_LAYOUT.rollLabel, 'bearing Roll No.');
     drawTextFit(page, valueFont, CERTIFICATE_TEXT_LAYOUT.rollValue, certificate.roll_no || certificate.serial_no);
-    drawTextFit(page, bodyFont, CERTIFICATE_TEXT_LAYOUT.passedText, `duly passed the ${clean(certificate.course_duration)}`);
+    drawTextFit(page, bodyFont, CERTIFICATE_TEXT_LAYOUT.durationText, `duly passed the ${clean(certificate.course_duration)}`);
     drawTextFit(page, valueFont, CERTIFICATE_TEXT_LAYOUT.courseTitle, certificate.course_title);
 
     drawTextFit(page, bodyFont, CERTIFICATE_TEXT_LAYOUT.examLabel, 'Course Examination held in the month of');
@@ -151,17 +158,20 @@ class CertificatePdfService {
     drawTextFit(page, bodyFont, CERTIFICATE_TEXT_LAYOUT.scaleLine, 'On the scale of 4.00 at Under the "Education Program" National Youth Technical Training Center');
     drawTextFit(page, bodyFont, CERTIFICATE_TEXT_LAYOUT.passportLabel, 'His/Her Passport Number as recorded in his/her registration book is');
     drawTextFit(page, valueFont, CERTIFICATE_TEXT_LAYOUT.passportValue, certificate.passport_no);
-    drawTextFit(page, valueFont, CERTIFICATE_TEXT_LAYOUT.issueDateLabel, 'Issue Date:');
+    drawTextFit(page, bodyFont, CERTIFICATE_TEXT_LAYOUT.issueDateLabel, 'Issue Date:');
     drawTextFit(page, valueFont, CERTIFICATE_TEXT_LAYOUT.issueDateValue, certificate.issue_date || new Date().toISOString().slice(0, 10));
 
     const qrBytes = await fs.promises.readFile(qr.absolutePath);
     const qrImage = await pdfDoc.embedPng(qrBytes);
-    const qrPos = toPoint(page, CERTIFICATE_TEXT_LAYOUT.qrCode);
+    const qrLayout = CERTIFICATE_TEXT_LAYOUT.qrCode;
+    const scale = layoutScale(page);
+    const qrWidth = qrLayout.width * Math.min(scale.x, scale.y);
+    const qrHeight = qrLayout.height * Math.min(scale.x, scale.y);
     page.drawImage(qrImage, {
-      x: qrPos.x,
-      y: qrPos.y,
-      width: CERTIFICATE_TEXT_LAYOUT.qrCode.width,
-      height: CERTIFICATE_TEXT_LAYOUT.qrCode.height,
+      x: (page.getWidth() - qrWidth) / 2,
+      y: qrLayout.y * scale.y,
+      width: qrWidth,
+      height: qrHeight,
     });
 
     const fileName = `certificate-${safeSerial}.pdf`;
