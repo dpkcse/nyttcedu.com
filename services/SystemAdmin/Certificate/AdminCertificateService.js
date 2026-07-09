@@ -323,16 +323,16 @@ class AdminCertificateService {
       }
     }
 
-    async GenerateCertificatePdfService(certificate_id, user_id) {
+    async GenerateCertificatePdfService(certificate_id, user_id, is_regenerate = false) {
       try {
         const id = parseInt(certificate_id, 10);
         if(!Number.isInteger(id) || id <= 0) {
-          return { status: false, errMsg: 'Invalid certificate id.' };
+          return { status: false, errMsg: 'Certificate ID is missing.' };
         }
 
         const certInfo = await this.AC_MODELS.GetApprovedCertificateByIdModel(id);
         if(!certInfo.status || certInfo.result.length !== 1) {
-          return { status: false, errMsg: 'Please approve this certificate before generating PDF.' };
+          return { status: false, errMsg: 'Certificate is not approved yet.' };
         }
 
         const CertificatePdfService = require('./CertificatePdfService');
@@ -350,7 +350,7 @@ class AdminCertificateService {
         if(saved.status && saved.result.affectedRows === 1) {
           return {
             status: true,
-            sucMsg: 'Certificate PDF generated successfully.',
+            sucMsg: is_regenerate ? 'Certificate regenerated successfully.' : 'Certificate generated successfully.',
             result: {
               certificate_pdf_path: generated.publicPath,
               qr_code_path: generated.qrCodePath,
@@ -358,10 +358,17 @@ class AdminCertificateService {
             }
           };
         }
-        return { status: false, errMsg: 'Certificate PDF generated but database was not updated.' };
+        return { status: false, errMsg: 'Database fields missing. Please run certificate generation SQL update.' };
       } catch(err) {
         console.log(err);
-        return { status: false, errMsg: err.message || err };
+        const message = err.message || err;
+        if(String(message).indexOf('Certificate template PDF not found') !== -1) {
+          return { status: false, errMsg: 'Certificate template not found. Please upload blank-certificate.pdf.' };
+        }
+        if(String(message).indexOf('Unknown column') !== -1) {
+          return { status: false, errMsg: 'Database fields missing. Please run certificate generation SQL update.' };
+        }
+        return { status: false, errMsg: message || 'PDF generation failed. Please check server logs.' };
       }
     }
 

@@ -304,15 +304,30 @@ var self = (module.exports = {
 
 
 	GenerateCertificatePdf : async function(req, res, next) {
+		const wantsJson = req.xhr || (req.headers.accept && req.headers.accept.indexOf('application/json') !== -1);
 		try {
 			const cmnIns = new CommonService();
       let user_info = await cmnIns.get_loged_in_user_info(req);
+			const certificateId = req.body.certificate_id || req.body.id;
+			const isRegenerate = req.body.regenerate == 1 || req.body.regenerate == '1';
 			const GenerateIns = new AdminCertificateService();
-			const generated = await GenerateIns.GenerateCertificatePdfService(req.body.id, user_info.user_id);
-			res.json(generated);
+			const generated = await GenerateIns.GenerateCertificatePdfService(certificateId, user_info.user_id, isRegenerate);
+			if(wantsJson) {
+				return res.json(generated);
+			}
+			if(generated.status) {
+				req.flash('sucMsg', generated.sucMsg);
+			} else {
+				req.flash('errMsg', generated.errMsg || 'PDF generation failed. Please check server logs.');
+			}
+			res.redirect('/certificate/search-old-way');
 		} catch(err) {
 			console.log(err);
-			res.json({ status: false, errMsg: 'Unable to generate certificate PDF.' });
+			if(wantsJson) {
+				return res.json({ status: false, errMsg: 'PDF generation failed. Please check server logs.' });
+			}
+			req.flash('errMsg', 'PDF generation failed. Please check server logs.');
+			res.redirect('/certificate/search-old-way');
 		}
 	},
 
