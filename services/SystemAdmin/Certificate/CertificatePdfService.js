@@ -21,43 +21,43 @@ const CERTIFICATE_FONT_SIZES = {
 };
 
 const SAFE_AREA = {
-  left: 205,
-  right: 820,
+  left: 220,
+  right: 760,
   top: 315,
-  bottom: 85,
+  bottom: 95,
 };
 
 const CERTIFICATE_TEXT_LAYOUT = {
   // Template already contains the SL No- label; draw only the dynamic number.
-  serialValue: { x: 125, y: 405, size: 15, maxWidth: 130, minSize: 12 },
+  serialValue: { x: 125, y: 405, size: 15, maxWidth: 130 },
 
   regLabel: { x: 640, y: 390, size: 14 },
-  regValue: { x: 715, y: 390, size: 14, maxWidth: 130, minSize: 12 },
+  regValue: { x: 715, y: 390, size: 14, maxWidth: 130 },
 
   sessionLabel: { x: 640, y: 365, size: 14 },
-  sessionValue: { x: 715, y: 365, size: 14, maxWidth: 170, minSize: 12 },
+  sessionValue: { x: 715, y: 365, size: 14, maxWidth: 160 },
 
-  line1: { x: 220, y: 310, size: 16, maxWidth: 600, minSize: 13 },
-  line2: { x: 220, y: 275, size: 16, maxWidth: 560, minSize: 13 },
-  fatherTag: { x: 760, y: 275, size: 14 },
+  line1: { x: 220, y: 310, size: 16, maxWidth: 540 },
+  line2: { x: 220, y: 275, size: 16, maxWidth: 500 },
+  fatherTag: { x: 700, y: 275, size: 13 },
 
-  line3: { x: 220, y: 240, size: 16, maxWidth: 560, minSize: 13 },
-  motherTag: { x: 760, y: 240, size: 14 },
+  line3: { x: 220, y: 240, size: 16, maxWidth: 500 },
+  motherTag: { x: 700, y: 240, size: 13 },
 
-  line4: { x: 220, y: 205, size: 16, maxWidth: 600, minSize: 13 },
+  line4: { x: 220, y: 205, size: 16, maxWidth: 540 },
 
-  rollCourseLine: { x: 220, y: 165, size: 16, maxWidth: 600, minSize: 13 },
-  rollCourseLine2: { x: 220, y: 140, size: 16, maxWidth: 600, minSize: 13 },
+  rollCourseLine: { x: 220, y: 165, size: 15, maxWidth: 540 },
+  rollCourseLine2: { x: 220, y: 140, size: 15, maxWidth: 540 },
 
-  examResultLine: { x: 220, y: 115, size: 15, maxWidth: 600, minSize: 12 },
+  examResultLine: { x: 220, y: 112, size: 14.5, maxWidth: 540 },
 
-  scaleLine: { x: 220, y: 90, size: 13.5, maxWidth: 600, minSize: 11 },
+  scaleLine: { x: 220, y: 88, size: 13.2, maxWidth: 540 },
 
-  passportLine: { x: 220, y: 68, size: 13.5, maxWidth: 450, minSize: 11 },
+  passportLine: { x: 220, y: 66, size: 13.2, maxWidth: 420 },
 
-  issueDate: { x: 85, y: 45, size: 14, maxWidth: 220, minSize: 12 },
+  issueDate: { x: 85, y: 45, size: 13.5, maxWidth: 220 },
 
-  qrCode: { x: 520, y: 10, width: 70, height: 70 },
+  qrCode: { x: 525, y: 35, width: 70, height: 70 },
 };
 
 function cleanValue(value, fallback = '') {
@@ -66,6 +66,19 @@ function cleanValue(value, fallback = '') {
   if (!text) return fallback;
   if (['n/a', 'undefined', 'null'].includes(text.toLowerCase())) return fallback;
   return text;
+}
+
+
+function formatCertificateDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value).trim();
+
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
 }
 
 function layoutScale(page) {
@@ -235,7 +248,7 @@ class CertificatePdfService {
     const courseTitle = cleanValue(certificate.course_title);
     let courseDisplay = courseTitle;
     if (courseDuration && courseTitle && !courseTitle.toLowerCase().includes(courseDuration.toLowerCase())) {
-      courseDisplay = `${courseDuration} ${courseTitle}`;
+      courseDisplay = `${courseTitle} (${courseDuration})`;
     }
     const examMonth = cleanValue(certificate.exam_month);
     const passingYear = cleanValue(certificate.passing_year);
@@ -243,7 +256,8 @@ class CertificatePdfService {
     const examPeriodLabel = examMonth ? 'month of ' : 'year ';
     const result = cleanValue(certificate.result);
     const resultLabel = /^[0-9.]+$/.test(result) ? 'CGPA' : 'Grade';
-    const passportNo = cleanValue(certificate.passport_no, '........................');
+    const passportNo = cleanValue(certificate.passport_no, '....................');
+    const issueDate = formatCertificateDate(certificate.issue_date) || formatCertificateDate(new Date().toISOString().slice(0, 10));
 
     drawLayoutText(page, valueFont, CERTIFICATE_TEXT_LAYOUT.serialValue, safeSerial);
     drawLayoutText(page, bodyFont, CERTIFICATE_TEXT_LAYOUT.regLabel, 'Reg. No :');
@@ -285,7 +299,7 @@ class CertificatePdfService {
     ]);
     drawLayoutSegments(page, CERTIFICATE_TEXT_LAYOUT.issueDate, [
       { text: 'Issue Date: ', font: bodyFont },
-      { text: cleanValue(certificate.issue_date, new Date().toISOString().slice(0, 10)), font: valueFont, isValue: true },
+      { text: issueDate, font: valueFont, isValue: true },
     ]);
 
     const qrBytes = await fs.promises.readFile(qr.absolutePath);
