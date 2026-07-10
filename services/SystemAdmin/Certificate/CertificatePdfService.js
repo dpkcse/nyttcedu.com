@@ -3,61 +3,62 @@ const path = require('path');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const CertificateQrService = require('./CertificateQrService');
 
-const TEMPLATE_PATH = process.env.CERTIFICATE_TEMPLATE_PATH || path.join(process.cwd(), 'public', 'uploads', 'certificates', 'templates', 'blank-certificate.pdf');
+const TEMPLATE_IMAGE_PATH = process.env.CERTIFICATE_TEMPLATE_IMAGE_PATH || path.join(process.cwd(), 'public', 'uploads', 'certificates', 'templates', 'blank-certificate.png');
+const TEMPLATE_IMAGE_MISSING_MESSAGE = 'Certificate PNG template not found. Please upload blank-certificate.png to public/uploads/certificates/templates/';
 const GENERATED_DIR = path.join(process.cwd(), 'public', 'uploads', 'certificates', 'generated');
 const PUBLIC_GENERATED_DIR = '/uploads/certificates/generated';
 
-const BASE_LAYOUT_SIZE = { width: 1100, height: 520 };
+const PAGE = {
+  width: 841.89,
+  height: 595.28,
+};
 
 const CERTIFICATE_FONT_SIZES = {
-  serial: 15,
-  regSession: 15,
-  label: 16,
-  value: 16,
-  studentName: 18,
-  bodyLine: 16,
-  smallLine: 15,
-  issueDate: 15,
+  serial: 12,
+  regSession: 12,
+  body: 13.5,
+  value: 13.5,
+  studentName: 15,
+  small: 12.5,
+  issueDate: 12.5,
 };
 
 const SAFE_AREA = {
-  left: 220,
-  right: 760,
-  top: 315,
+  left: 190,
+  right: 720,
+  top: 350,
   bottom: 95,
 };
 
 const CERTIFICATE_TEXT_LAYOUT = {
-  // Template already contains the SL No- label; draw only the dynamic number.
-  serialValue: { x: 125, y: 405, size: 15, maxWidth: 130 },
+  serial: { x: 120, y: 425, size: 12, maxWidth: 170 },
 
-  regLabel: { x: 640, y: 390, size: 14 },
-  regValue: { x: 715, y: 390, size: 14, maxWidth: 130 },
+  regLabel: { x: 560, y: 410, size: 12 },
+  regValue: { x: 625, y: 410, size: 12, maxWidth: 160 },
+  sessionLabel: { x: 560, y: 390, size: 12 },
+  sessionValue: { x: 625, y: 390, size: 12, maxWidth: 160 },
 
-  sessionLabel: { x: 640, y: 365, size: 14 },
-  sessionValue: { x: 715, y: 365, size: 14, maxWidth: 160 },
+  line1: { x: 200, y: 335, size: 13.5, maxWidth: 520 },
+  line2: { x: 200, y: 305, size: 13.5, maxWidth: 495 },
+  fatherTag: { x: 700, y: 305, size: 12 },
 
-  line1: { x: 220, y: 310, size: 16, maxWidth: 540 },
-  line2: { x: 220, y: 275, size: 16, maxWidth: 500 },
-  fatherTag: { x: 700, y: 275, size: 13 },
+  line3: { x: 200, y: 275, size: 13.5, maxWidth: 495 },
+  motherTag: { x: 700, y: 275, size: 12 },
 
-  line3: { x: 220, y: 240, size: 16, maxWidth: 500 },
-  motherTag: { x: 700, y: 240, size: 13 },
+  line4: { x: 200, y: 245, size: 13.5, maxWidth: 540 },
 
-  line4: { x: 220, y: 205, size: 16, maxWidth: 540 },
+  rollCourseLine: { x: 200, y: 205, size: 13.5, maxWidth: 560 },
+  rollCourseLine2: { x: 200, y: 185, size: 13.5, maxWidth: 560 },
 
-  rollCourseLine: { x: 220, y: 165, size: 15, maxWidth: 540 },
-  rollCourseLine2: { x: 220, y: 140, size: 15, maxWidth: 540 },
+  examResultLine: { x: 200, y: 155, size: 13.2, maxWidth: 560 },
 
-  examResultLine: { x: 220, y: 112, size: 14.5, maxWidth: 540 },
+  scaleLine: { x: 200, y: 125, size: 12.5, maxWidth: 560 },
 
-  scaleLine: { x: 220, y: 88, size: 13.2, maxWidth: 540 },
+  passportLine: { x: 200, y: 100, size: 12.5, maxWidth: 430 },
 
-  passportLine: { x: 220, y: 66, size: 13.2, maxWidth: 420 },
+  issueDate: { x: 75, y: 70, size: 12.5, maxWidth: 180 },
 
-  issueDate: { x: 85, y: 45, size: 13.5, maxWidth: 220 },
-
-  qrCode: { x: 525, y: 35, width: 70, height: 70 },
+  qrCode: { x: 390, y: 55, width: 70, height: 70 },
 };
 
 function cleanValue(value, fallback = '') {
@@ -68,37 +69,16 @@ function cleanValue(value, fallback = '') {
   return text;
 }
 
-
 function formatCertificateDate(value) {
   if (!value) return '';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return String(value).trim();
+  if (Number.isNaN(date.getTime())) return cleanValue(value);
 
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   });
-}
-
-function layoutScale(page) {
-  const { width, height } = page.getSize();
-  return { x: width / BASE_LAYOUT_SIZE.width, y: height / BASE_LAYOUT_SIZE.height };
-}
-
-function toPoint(page, position) {
-  const scale = layoutScale(page);
-  return { x: position.x * scale.x, y: position.y * scale.y };
-}
-
-function scaledSize(page, position) {
-  const scale = layoutScale(page);
-  return position.size * Math.min(scale.x, scale.y);
-}
-
-function scaledMaxWidth(page, position, fallback) {
-  const scale = layoutScale(page);
-  return position.maxWidth ? position.maxWidth * scale.x : fallback;
 }
 
 function truncateText(text, font, size, maxWidth) {
@@ -129,7 +109,6 @@ function drawTextFit(page, text, {
   page.drawText(fitted, { x, y, size: fittedSize, font, color, maxWidth });
 }
 
-
 function segmentText(segment) {
   return segment.isValue ? cleanValue(segment.text, '') : String(segment.text || '');
 }
@@ -153,37 +132,58 @@ function drawSegmentsFit(page, segments, { x, y, size, minSize = 11, maxWidth, c
   });
 }
 
-function drawSegments(page, segments, options) {
-  drawSegmentsFit(page, segments, options);
-}
-
 function drawLayoutSegments(page, position, segments) {
-  const point = toPoint(page, position);
-  const maxWidth = scaledMaxWidth(page, position, Math.max(0, SAFE_AREA.right - position.x));
-  const size = scaledSize(page, position);
-  const scale = layoutScale(page);
-  const minSize = (position.minSize || 11) * Math.min(scale.x, scale.y);
-  const scaledSegments = segments.map((segment) => ({
-    ...segment,
-    size: segment.size ? segment.size * Math.min(scale.x, scale.y) : undefined,
-  }));
-  drawSegments(page, scaledSegments, { ...point, size, maxWidth, minSize });
+  const maxWidth = position.maxWidth || Math.max(0, SAFE_AREA.right - position.x);
+  drawSegmentsFit(page, segments, { ...position, maxWidth });
 }
 
 function drawLayoutText(page, font, position, text, options = {}) {
-  const point = toPoint(page, position);
-  const maxWidth = scaledMaxWidth(page, position, options.maxWidth || Math.max(0, SAFE_AREA.right - position.x));
-  const size = scaledSize(page, position);
-  const scale = layoutScale(page);
-  const minSize = (position.minSize || options.minSize || 11) * Math.min(scale.x, scale.y);
+  const maxWidth = position.maxWidth || options.maxWidth || Math.max(0, SAFE_AREA.right - position.x);
   drawTextFit(page, text, {
-    ...point,
+    ...position,
     maxWidth,
-    size,
-    minSize,
+    minSize: position.minSize || options.minSize || 11,
     font,
     color: options.color || rgb(0, 0, 0),
   });
+}
+
+function drawImageCover(page, image, pageWidth, pageHeight) {
+  const imageRatio = image.width / image.height;
+  const pageRatio = pageWidth / pageHeight;
+
+  let drawWidth = pageWidth;
+  let drawHeight = pageHeight;
+  let x = 0;
+  let y = 0;
+
+  if (Math.abs(imageRatio - pageRatio) > 0.01) {
+    if (imageRatio > pageRatio) {
+      drawHeight = pageHeight;
+      drawWidth = pageHeight * imageRatio;
+      x = (pageWidth - drawWidth) / 2;
+    } else {
+      drawWidth = pageWidth;
+      drawHeight = pageWidth / imageRatio;
+      y = (pageHeight - drawHeight) / 2;
+    }
+  }
+
+  page.drawImage(image, { x, y, width: drawWidth, height: drawHeight });
+}
+
+function getResultSegments(result, bodyFont, valueFont) {
+  if (!result) return [];
+  const resultLabel = /^[0-9]+(\.[0-9]+)?$/.test(result) ? 'CGPA' : 'Grade';
+  return [
+    { text: ` and he/she secured ${resultLabel} `, font: bodyFont },
+    { text: result, font: valueFont, isValue: true },
+  ];
+}
+
+function buildCourseDisplay(courseDuration, courseTitle) {
+  if (courseDuration && courseTitle) return `${courseDuration} ${courseTitle}`;
+  return courseTitle || courseDuration;
 }
 
 function drawCourseLine(page, bodyFont, valueFont, rollNo, courseDisplay) {
@@ -212,30 +212,23 @@ function drawCourseLine(page, bodyFont, valueFont, rollNo, courseDisplay) {
   drawLayoutText(page, valueFont, CERTIFICATE_TEXT_LAYOUT.rollCourseLine2, courseDisplay);
 }
 
-function getLandscapePageSize(embeddedPage) {
-  const width = Math.max(embeddedPage.width, embeddedPage.height);
-  const height = Math.min(embeddedPage.width, embeddedPage.height);
-  return { width, height };
-}
-
 class CertificatePdfService {
   static async generate(certificate) {
     const safeSerial = String(certificate.serial_no || '').replace(/[^a-zA-Z0-9_-]/g, '');
     if (!safeSerial) {
       throw new Error('Invalid certificate serial number for PDF generation.');
     }
-    if (!fs.existsSync(TEMPLATE_PATH)) {
-      throw new Error(`Certificate template PDF not found. Upload it to ${TEMPLATE_PATH} or set CERTIFICATE_TEMPLATE_PATH.`);
+    if (!fs.existsSync(TEMPLATE_IMAGE_PATH)) {
+      throw new Error(TEMPLATE_IMAGE_MISSING_MESSAGE);
     }
 
     await fs.promises.mkdir(GENERATED_DIR, { recursive: true });
     const qr = await CertificateQrService.generate(safeSerial);
-    const templateBytes = await fs.promises.readFile(TEMPLATE_PATH);
+    const templateImageBytes = await fs.promises.readFile(TEMPLATE_IMAGE_PATH);
     const pdfDoc = await PDFDocument.create();
-    const [templatePage] = await pdfDoc.embedPdf(templateBytes, [0]);
-    const pageSize = getLandscapePageSize(templatePage);
-    const page = pdfDoc.addPage([pageSize.width, pageSize.height]);
-    page.drawPage(templatePage, { x: 0, y: 0, width: pageSize.width, height: pageSize.height });
+    const templateImage = await pdfDoc.embedPng(templateImageBytes);
+    const page = pdfDoc.addPage([PAGE.width, PAGE.height]);
+    drawImageCover(page, templateImage, PAGE.width, PAGE.height);
 
     const bodyFont = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
     const valueFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBoldItalic);
@@ -246,20 +239,19 @@ class CertificatePdfService {
     const rollNo = cleanValue(certificate.roll_no || certificate.serial_no);
     const courseDuration = cleanValue(certificate.course_duration);
     const courseTitle = cleanValue(certificate.course_title);
-    let courseDisplay = courseTitle;
-    if (courseDuration && courseTitle && !courseTitle.toLowerCase().includes(courseDuration.toLowerCase())) {
-      courseDisplay = `${courseTitle} (${courseDuration})`;
-    }
+    const courseDisplay = buildCourseDisplay(courseDuration, courseTitle);
     const examMonth = cleanValue(certificate.exam_month);
     const passingYear = cleanValue(certificate.passing_year);
     const examPeriod = examMonth || passingYear;
     const examPeriodLabel = examMonth ? 'month of ' : 'year ';
     const result = cleanValue(certificate.result);
-    const resultLabel = /^[0-9.]+$/.test(result) ? 'CGPA' : 'Grade';
-    const passportNo = cleanValue(certificate.passport_no, '....................');
+    const passportNo = cleanValue(certificate.passport_no, '........................');
     const issueDate = formatCertificateDate(certificate.issue_date) || formatCertificateDate(new Date().toISOString().slice(0, 10));
 
-    drawLayoutText(page, valueFont, CERTIFICATE_TEXT_LAYOUT.serialValue, safeSerial);
+    drawLayoutSegments(page, CERTIFICATE_TEXT_LAYOUT.serial, [
+      { text: 'SL No : ', font: bodyFont },
+      { text: safeSerial, font: valueFont, isValue: true },
+    ]);
     drawLayoutText(page, bodyFont, CERTIFICATE_TEXT_LAYOUT.regLabel, 'Reg. No :');
     drawLayoutText(page, valueFont, CERTIFICATE_TEXT_LAYOUT.regValue, cleanValue(certificate.reg_no || certificate.id));
     drawLayoutText(page, bodyFont, CERTIFICATE_TEXT_LAYOUT.sessionLabel, 'Session :');
@@ -285,12 +277,10 @@ class CertificatePdfService {
     ]);
 
     drawCourseLine(page, bodyFont, valueFont, rollNo, courseDisplay);
-    const resultSuffix = result ? ` and he/she secured ${resultLabel} ` : '';
     drawLayoutSegments(page, CERTIFICATE_TEXT_LAYOUT.examResultLine, [
       { text: `Course Examination held in the ${examPeriodLabel}`, font: bodyFont },
       { text: examPeriod, font: valueFont, isValue: true },
-      { text: resultSuffix, font: bodyFont },
-      { text: result, font: valueFont, isValue: true },
+      ...getResultSegments(result, bodyFont, valueFont),
     ]);
     drawLayoutText(page, bodyFont, CERTIFICATE_TEXT_LAYOUT.scaleLine, 'On the scale of 4.00 at Under the "Education Program" National Youth Technical Training Center');
     drawLayoutSegments(page, CERTIFICATE_TEXT_LAYOUT.passportLine, [
@@ -305,14 +295,11 @@ class CertificatePdfService {
     const qrBytes = await fs.promises.readFile(qr.absolutePath);
     const qrImage = await pdfDoc.embedPng(qrBytes);
     const qrLayout = CERTIFICATE_TEXT_LAYOUT.qrCode;
-    const scale = layoutScale(page);
-    const qrWidth = qrLayout.width * Math.min(scale.x, scale.y);
-    const qrHeight = qrLayout.height * Math.min(scale.x, scale.y);
     page.drawImage(qrImage, {
-      x: qrLayout.x * scale.x,
-      y: qrLayout.y * scale.y,
-      width: qrWidth,
-      height: qrHeight,
+      x: qrLayout.x,
+      y: qrLayout.y,
+      width: qrLayout.width,
+      height: qrLayout.height,
     });
 
     const fileName = `certificate-${safeSerial}.pdf`;
