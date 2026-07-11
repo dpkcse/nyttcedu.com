@@ -22,20 +22,18 @@ const PAGE = { width: 841.89, height: 595.28 }; // A4 landscape points, matching
 const INK = rgb(0.13, 0.1, 0.08);
 const SOFT_INK = rgb(0.2, 0.16, 0.12);
 const LINE_INK = rgb(0.38, 0.28, 0.18);
-const DISCLAIMER_RED = rgb(0.64, 0.05, 0.04);
 
 const CERTIFICATE_LAYOUT = {
   safeLeft: 78,
   safeRight: 764,
-  serial: { x: 105, y: 425, size: 13, valueWidth: 82 },
-  meta: { labelX: 565, valueX: 655, y: 426, rowGap: 18, labelSize: 12.2, valueSize: 12.2, valueWidth: 118 },
-  body: { x: 145, y: 324, width: 552, rowGap: 38, staticSize: 17.6, valueSize: 17.2 },
+  serial: { x: 105, y: 375, size: 13, valueWidth: 88 },
+  meta: { labelX: 545, valueX: 650, y: 421, rowGap: 18, labelSize: 12.2, valueSize: 12.2, valueWidth: 112 },
+  body: { x: 128, width: 586, y: 324, rowGap: 38, staticSize: 17.6, valueSize: 17.2 },
   bottom: { x: 82, y: 84, width: 678, height: 58, gap: 18 },
   dates: { width: 205, size: 9.2, lineGap: 14 },
   compared: { width: 132 },
   qrCode: { width: 82, height: 82 },
   controller: { width: 175 },
-  disclaimer: { y: 28, size: 10.5 },
 };
 
 function cleanValue(value, fallback = '') {
@@ -177,17 +175,6 @@ function drawBottomSection(page, bodyFont, valueFont, values, options = {}) {
   return { x: qrX, y: labelY - 1, width: CERTIFICATE_LAYOUT.qrCode.width, height: CERTIFICATE_LAYOUT.qrCode.height };
 }
 
-function drawDisclaimer(page, bodyFont) {
-  drawCenteredText(page, 'This Certificate is issued without any alteration or erasure', {
-    centerX: PAGE.width / 2,
-    y: CERTIFICATE_LAYOUT.disclaimer.y,
-    font: bodyFont,
-    size: CERTIFICATE_LAYOUT.disclaimer.size,
-    maxWidth: 480,
-    color: DISCLAIMER_RED,
-  });
-}
-
 async function embedCertificateFonts(pdfDoc) {
   if (fontkit && fs.existsSync(DYNAMIC_FONT_PATH) && fs.existsSync(STATIC_FONT_PATH)) {
     pdfDoc.registerFontkit(fontkit);
@@ -229,40 +216,40 @@ class CertificatePdfService {
     const publicationDate = formatCertificateDate(certificate.publication_date || certificate.result_publication_date || certificate.published_at);
 
     drawText(page, 'SL No-', { x: layout.serial.x, y: layout.serial.y, font: bodyFont, size: layout.serial.size });
-    drawText(page, formatSerial(safeSerial), { x: layout.serial.x + 42, y: layout.serial.y, font: valueFont, size: layout.serial.size, maxWidth: layout.serial.valueWidth, color: INK });
+    drawValueWithUnderline(page, formatSerial(safeSerial), { x: layout.serial.x + 44, y: layout.serial.y, width: layout.serial.valueWidth, font: valueFont, size: layout.serial.size, minSize: 9, align: 'left' });
 
     drawText(page, 'Registration No.', { x: layout.meta.labelX, y: layout.meta.y, font: bodyFont, size: layout.meta.labelSize });
-    drawText(page, cleanValue(certificate.reg_no || certificate.id), { x: layout.meta.valueX, y: layout.meta.y, font: valueFont, size: layout.meta.valueSize, maxWidth: layout.meta.valueWidth, minSize: 8, color: INK });
-    drawText(page, 'Session.', { x: layout.meta.labelX + 42, y: layout.meta.y - layout.meta.rowGap, font: bodyFont, size: layout.meta.labelSize });
-    drawText(page, cleanValue(certificate.session), { x: layout.meta.valueX, y: layout.meta.y - layout.meta.rowGap, font: valueFont, size: layout.meta.valueSize, maxWidth: layout.meta.valueWidth, minSize: 8, color: INK });
+    drawValueWithUnderline(page, cleanValue(certificate.reg_no || certificate.id), { x: layout.meta.valueX, y: layout.meta.y, width: layout.meta.valueWidth, font: valueFont, size: layout.meta.valueSize, minSize: 8, align: 'left' });
+    drawText(page, 'Session.', { x: layout.meta.labelX, y: layout.meta.y - layout.meta.rowGap, font: bodyFont, size: layout.meta.labelSize });
+    drawValueWithUnderline(page, cleanValue(certificate.session), { x: layout.meta.valueX, y: layout.meta.y - layout.meta.rowGap, width: layout.meta.valueWidth, font: valueFont, size: layout.meta.valueSize, minSize: 8, align: 'left' });
 
     const y = layout.body.y;
     drawCertificateLine(page, [
       { kind: 'static', text: 'This Is To Certify That', size: 18.8 },
       { kind: 'gap', width: 13 },
-      { kind: 'value', text: studentName, width: 320, size: 20.2, minSize: 12 },
+      { kind: 'value', text: studentName, width: 350, size: 20.2, minSize: 12 },
     ], y, { bodyFont, valueFont });
 
     drawCertificateLine(page, [
       { kind: 'static', text: 'Son/Daughter of' },
       { kind: 'gap', width: 13 },
-      { kind: 'value', text: parentNames, width: 382, minSize: 10 },
+      { kind: 'value', text: parentNames, width: 420, minSize: 10 },
     ], y - layout.body.rowGap, { bodyFont, valueFont });
 
     drawCertificateLine(page, [
       { kind: 'static', text: 'He/She Successfully Completed The', size: 16.2 },
       { kind: 'gap', width: 12 },
-      { kind: 'value', text: courseDisplay, width: 330, size: 15.8, minSize: 8.8 },
+      { kind: 'value', text: courseDisplay, width: 365, size: 15.8, minSize: 8.8 },
     ], y - layout.body.rowGap * 2, { bodyFont, valueFont });
 
     drawCertificateLine(page, [
       { kind: 'static', text: 'Examination Held in the Month of', size: 14.4 },
       { kind: 'gap', width: 8 },
-      { kind: 'value', text: examMonth, width: 118, size: 14.3, minSize: 8.8 },
+      { kind: 'value', text: examMonth, width: 124, size: 14.3, minSize: 8.8 },
       { kind: 'gap', width: 10 },
       { kind: 'static', text: 'He/She Secured Grade', size: 14.4 },
       { kind: 'gap', width: 8 },
-      { kind: 'value', text: grade, width: 54, size: 14.6, minSize: 8.8 },
+      { kind: 'value', text: grade, width: 60, size: 14.6, minSize: 8.8 },
     ], y - layout.body.rowGap * 3, { bodyFont, valueFont });
 
     drawCertificateLine(page, [
@@ -276,8 +263,6 @@ class CertificatePdfService {
     const qrPlacement = drawBottomSection(page, bodyFont, valueFont, { issueDate, publicationDate }, { canDrawCheckMark: usingCertificateFonts });
     const qrImage = await pdfDoc.embedPng(await fs.promises.readFile(qr.absolutePath));
     page.drawImage(qrImage, qrPlacement);
-    drawDisclaimer(page, bodyFont);
-
     const fileName = `certificate-${safeSerial}.pdf`;
     const absolutePath = path.join(GENERATED_DIR, fileName);
     const publicPath = `${PUBLIC_GENERATED_DIR}/${fileName}`;
