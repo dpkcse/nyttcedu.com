@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
+const { PDFDocument, rgb } = require('pdf-lib');
 const CertificateQrService = require('./CertificateQrService');
 
 let fontkit = null;
