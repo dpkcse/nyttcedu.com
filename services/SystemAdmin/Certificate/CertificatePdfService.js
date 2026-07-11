@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { PDFDocument, rgb } = require('pdf-lib');
+const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const CertificateQrService = require('./CertificateQrService');
 
 let fontkit = null;
@@ -279,7 +279,7 @@ function drawCgpaLine(page, { y, cgpa }, fonts) {
   drawText(page, scaleText, { x: scaleX, y, font: fonts.staticBodyFont, size });
 }
 
-function drawBottomSection(page, normalFont, values) {
+function drawBottomSection(page, fonts, values) {
   const layout = CERTIFICATE_LAYOUT.bottom;
   const dateX = layout.x;
   const comparedX = dateX + CERTIFICATE_LAYOUT.dates.width + layout.gap;
@@ -289,17 +289,17 @@ function drawBottomSection(page, normalFont, values) {
   const lineY = labelY + pxToPt(22.5);
   const dateTopY = labelY + pxToPt(36);
 
-  drawText(page, 'Date of Publication of Result:', { x: dateX, y: dateTopY, font: normalFont, size: CERTIFICATE_LAYOUT.dates.size });
-  drawText(page, values.publicationDate, { x: dateX + pxToPt(176), y: dateTopY, font: normalFont, size: CERTIFICATE_LAYOUT.dates.size, maxWidth: pxToPt(96), minSize: pxToPt(10), color: INK });
-  drawText(page, 'Date of Issue:', { x: dateX, y: dateTopY - CERTIFICATE_LAYOUT.dates.lineGap, font: normalFont, size: CERTIFICATE_LAYOUT.dates.size });
-  drawText(page, values.issueDate, { x: dateX + pxToPt(91), y: dateTopY - CERTIFICATE_LAYOUT.dates.lineGap, font: normalFont, size: CERTIFICATE_LAYOUT.dates.size, maxWidth: pxToPt(126), minSize: pxToPt(10), color: INK });
+  drawText(page, 'Date of Publication of Result:', { x: dateX, y: dateTopY, font: fonts.normalFont, size: CERTIFICATE_LAYOUT.dates.size });
+  drawText(page, values.publicationDate, { x: dateX + pxToPt(176), y: dateTopY, font: fonts.normalFont, size: CERTIFICATE_LAYOUT.dates.size, maxWidth: pxToPt(96), minSize: pxToPt(10), color: INK });
+  drawText(page, 'Date of Issue:', { x: dateX, y: dateTopY - CERTIFICATE_LAYOUT.dates.lineGap, font: fonts.normalFont, size: CERTIFICATE_LAYOUT.dates.size });
+  drawText(page, values.issueDate, { x: dateX + pxToPt(91), y: dateTopY - CERTIFICATE_LAYOUT.dates.lineGap, font: fonts.normalFont, size: CERTIFICATE_LAYOUT.dates.size, maxWidth: pxToPt(126), minSize: pxToPt(10), color: INK });
 
   [
     { x: comparedX, width: CERTIFICATE_LAYOUT.compared.width, label: 'Compared by' },
     { x: controllerX, width: CERTIFICATE_LAYOUT.controller.width, label: 'Deputy/Controller of Examinations' },
   ].forEach((signature) => {
     page.drawLine({ start: { x: signature.x + pxToPt(11), y: lineY }, end: { x: signature.x + signature.width - pxToPt(11), y: lineY }, thickness: 0.65, color: LINE_INK });
-    drawCenteredText(page, signature.label, { centerX: signature.x + signature.width / 2, y: labelY, font: normalFont, size: pxToPt(13.5), maxWidth: signature.width - pxToPt(11) });
+    drawCenteredText(page, signature.label, { centerX: signature.x + signature.width / 2, y: labelY, font: fonts.normalFont, size: pxToPt(13.5), maxWidth: signature.width - pxToPt(11) });
   });
 
   return { x: qrX, y: labelY - pxToPt(1), width: CERTIFICATE_LAYOUT.qrCode.width, height: CERTIFICATE_LAYOUT.qrCode.height };
@@ -326,10 +326,14 @@ async function embedCertificateFonts(pdfDoc) {
       readRequiredFont(DYNAMIC_FONT_PATH, 'dynamic'),
       readRequiredFont(STATIC_FONT_PATH, 'static'),
     ]);
+    const normalFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const staticBodyFont = await pdfDoc.embedFont(staticFontBytes, { subset: true });
+    const dynamicFont = await pdfDoc.embedFont(dynamicFontBytes, { subset: true });
+
     return {
-      dynamicFont: await pdfDoc.embedFont(dynamicFontBytes, { subset: true }),
-      staticBodyFont: await pdfDoc.embedFont(staticFontBytes, { subset: true }),
-      normalFont: await pdfDoc.embedFont(StandardFonts.TimesRoman),
+      normalFont,
+      staticBodyFont,
+      dynamicFont,
     };
   } catch (error) {
     if (String(error.message || '').indexOf('Certificate PDF font') !== -1) throw error;
@@ -357,6 +361,11 @@ class CertificatePdfService {
     page.drawImage(templateImage, { x: 0, y: 0, width: PAGE.width, height: PAGE.height });
 
     const { staticBodyFont, dynamicFont, normalFont } = await embedCertificateFonts(pdfDoc);
+    const fonts = {
+      normalFont,
+      staticBodyFont,
+      dynamicFont,
+    };
     await fs.promises.mkdir(GENERATED_DIR, { recursive: true });
     const qr = await CertificateQrService.generate(safeSerial);
     const layout = CERTIFICATE_LAYOUT;
@@ -369,23 +378,22 @@ class CertificatePdfService {
     const issueDate = formatCertificateDate(certificate.issue_date) || formatCertificateDate(new Date().toISOString().slice(0, 10));
     const publicationDate = formatCertificateDate(certificate.publication_date || certificate.result_publication_date || certificate.published_at);
 
-    drawText(page, 'SL No-', { x: layout.serial.x, y: layout.serial.y, font: normalFont, size: layout.serial.size });
-    drawValueWithUnderline(page, formatSerial(safeSerial), { x: layout.serial.x + pxToPt(58), y: layout.serial.y, width: layout.serial.valueWidth, font: dynamicFont, size: layout.serial.size, minSize: pxToPt(12), align: 'left' });
+    drawText(page, 'SL No-', { x: layout.serial.x, y: layout.serial.y, font: fonts.normalFont, size: layout.serial.size });
+    drawValueWithUnderline(page, formatSerial(safeSerial), { x: layout.serial.x + pxToPt(58), y: layout.serial.y, width: layout.serial.valueWidth, font: fonts.dynamicFont, size: layout.serial.size, minSize: pxToPt(12), align: 'left' });
 
-    drawText(page, 'Registration No.', { x: layout.meta.labelX, y: layout.meta.y, font: normalFont, size: layout.meta.size, maxWidth: layout.meta.labelWidth, align: 'right' });
-    drawValueWithUnderline(page, cleanValue(certificate.reg_no || certificate.id), { x: layout.meta.valueX, y: layout.meta.y, width: layout.meta.valueWidth, font: dynamicFont, size: layout.meta.size, minSize: pxToPt(10), align: 'left' });
-    drawText(page, 'Session.', { x: layout.meta.labelX, y: layout.meta.y - layout.meta.rowGap, font: normalFont, size: layout.meta.size, maxWidth: layout.meta.labelWidth, align: 'right' });
-    drawValueWithUnderline(page, cleanValue(certificate.session), { x: layout.meta.valueX, y: layout.meta.y - layout.meta.rowGap, width: layout.meta.valueWidth, font: dynamicFont, size: layout.meta.size, minSize: pxToPt(10), align: 'left' });
+    drawText(page, 'Registration No.', { x: layout.meta.labelX, y: layout.meta.y, font: fonts.normalFont, size: layout.meta.size, maxWidth: layout.meta.labelWidth, align: 'right' });
+    drawValueWithUnderline(page, cleanValue(certificate.reg_no || certificate.id), { x: layout.meta.valueX, y: layout.meta.y, width: layout.meta.valueWidth, font: fonts.dynamicFont, size: layout.meta.size, minSize: pxToPt(10), align: 'left' });
+    drawText(page, 'Session.', { x: layout.meta.labelX, y: layout.meta.y - layout.meta.rowGap, font: fonts.normalFont, size: layout.meta.size, maxWidth: layout.meta.labelWidth, align: 'right' });
+    drawValueWithUnderline(page, cleanValue(certificate.session), { x: layout.meta.valueX, y: layout.meta.y - layout.meta.rowGap, width: layout.meta.valueWidth, font: fonts.dynamicFont, size: layout.meta.size, minSize: pxToPt(10), align: 'left' });
 
     const y = layout.body.y;
-    const fonts = { staticBodyFont, dynamicFont };
     drawJustifiedLabelValueLine(page, { y, label: 'This Is To Certify That', value: studentName }, fonts);
     drawJustifiedLabelValueLine(page, { y: y - layout.body.rowGap, label: 'Son/Daughter of', value: parentNames }, fonts);
     drawJustifiedLabelValueLine(page, { y: y - layout.body.rowGap * 2, label: 'He/She Successfully Completed The', value: courseDisplay }, fonts);
     drawExamGradeLine(page, { y: y - layout.body.rowGap * 3, examMonth: examPeriod, grade }, fonts);
     drawCgpaLine(page, { y: y - layout.body.rowGap * 4, cgpa }, fonts);
 
-    const qrPlacement = drawBottomSection(page, normalFont, { issueDate, publicationDate });
+    const qrPlacement = drawBottomSection(page, fonts, { issueDate, publicationDate });
     const qrImage = await pdfDoc.embedPng(await fs.promises.readFile(qr.absolutePath));
     page.drawImage(qrImage, qrPlacement);
     const fileName = `certificate-${safeSerial}.pdf`;
