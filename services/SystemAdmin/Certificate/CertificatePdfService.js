@@ -15,225 +15,114 @@ const TEMPLATE_IMAGE_MISSING_MESSAGE = 'Certificate PNG template not found. Plea
 const GENERATED_DIR = path.join(process.cwd(), 'public', 'uploads', 'certificates', 'generated');
 const PUBLIC_GENERATED_DIR = '/uploads/certificates/generated';
 const FONT_DIR = path.join(process.cwd(), 'public', 'assets', 'fonts', 'certificates');
-const DYNAMIC_FONT_PATH = path.join(FONT_DIR, 'PlaywriteID-Regular.ttf');
-const STATIC_FONT_PATH = path.join(FONT_DIR, 'Satisfy-Regular.ttf');
+const DYNAMIC_FONT_PATH = path.join(FONT_DIR, 'Quintessential-Regular.ttf');
+const STATIC_FONT_PATH = path.join(FONT_DIR, 'UnifrakturMaguntia-Regular.ttf');
 
-const PAGE = { width: 841.89, height: 595.28 };
+const PAGE = { width: 841.89, height: 595.28 }; // A4 landscape points.
+const PX_TO_PT = 72 / 96;
 const INK = rgb(0.13, 0.1, 0.08);
 const SOFT_INK = rgb(0.2, 0.16, 0.12);
 const LINE_INK = rgb(0.38, 0.28, 0.18);
-const DISCLAIMER_RED = rgb(0.64, 0.05, 0.04);
+
+function pxToPt(px) {
+  const value = Number(px);
+  if (!Number.isFinite(value)) {
+    throw new TypeError(`Invalid pixel value: ${px}`);
+  }
+  return value * PX_TO_PT;
+}
+
+const BODY_FONT_SIZE = pxToPt(22);
+const BODY_MIN_FONT_SIZE = pxToPt(13);
+const BODY_ROW_GAP = pxToPt(50);
+const INLINE_GAP = pxToPt(12);
+const HEADER_FONT_SIZE = pxToPt(16);
+const META_FONT_SIZE = pxToPt(15);
+const UNDERLINE_OFFSET = pxToPt(4.5);
+const UNDERLINE_THICKNESS = 0.55;
+const DOT_LENGTH = 2.1;
+const DOT_GAP = 2.4;
 
 const CERTIFICATE_LAYOUT = {
-  serial: { x: 120, y: 425, size: 12, valueWidth: 110 },
-
-  regLabel: { x: 560, y: 405, size: 12 },
-  regValue: { x: 625, y: 405, size: 12, width: 138 },
-  sessionLabel: { x: 560, y: 385, size: 12 },
-  sessionValue: { x: 625, y: 385, size: 12, width: 138 },
-
-  bodyLeft: 190,
-  bodyRight: 720,
-  line1Y: 335,
-  lineGap: 30,
-
-  studentName: { size: 17, width: 315 },
-  bodyStatic: { size: 14 },
-  bodyValue: { size: 14.5 },
-
-  fatherLineY: 305,
-  motherLineY: 275,
-  instituteLineY: 245,
-
-  courseLine1Y: 215,
-  courseLine2Y: 195,
-  examLineY: 174,
-  scaleLineY: 150,
-  passportLineY: 126,
-
-  issueDate: { x: 80, y: 92, size: 12, valueWidth: 132 },
-
-  qrCode: { x: 386, y: 68, width: 70, height: 70 },
-
-  examControllerLine: { x1: 210, y: 105, x2: 330, y2: 105 },
-  examControllerLabel: { x: 235, y: 85, size: 11 },
-
-  chairmanLine: { x1: 515, y: 105, x2: 635, y2: 105 },
-  chairmanLabel: { x: 550, y: 85, size: 11 },
-
-  disclaimer: { y: 28, size: 10.5 },
+  safeLeft: 78,
+  safeRight: 764,
+  serial: { x: 105, y: 375, size: HEADER_FONT_SIZE, valueWidth: pxToPt(118) },
+  meta: {
+    labelX: 522,
+    labelWidth: 112,
+    valueX: 650,
+    y: 421,
+    rowGap: pxToPt(24),
+    size: META_FONT_SIZE,
+    valueWidth: 112,
+  },
+  body: {
+    inset: pxToPt(50),
+    y: 324,
+    fontSize: BODY_FONT_SIZE,
+    minFontSize: BODY_MIN_FONT_SIZE,
+    rowGap: BODY_ROW_GAP,
+  },
+  bottom: { x: 82, y: 84, width: 678, height: 58, gap: pxToPt(24) },
+  dates: { width: 205, size: pxToPt(12.25), lineGap: pxToPt(18.5) },
+  compared: { width: 132 },
+  qrCode: { width: pxToPt(96), height: pxToPt(96) },
+  controller: { width: 175 },
 };
+
+const MONTHS = {
+  jan: 'Jan', january: 'Jan',
+  feb: 'Feb', february: 'Feb',
+  mar: 'Mar', march: 'Mar',
+  apr: 'Apr', april: 'Apr',
+  may: 'May',
+  jun: 'Jun', june: 'Jun',
+  jul: 'Jul', july: 'Jul',
+  aug: 'Aug', august: 'Aug',
+  sep: 'Sep', sept: 'Sep', september: 'Sep',
+  oct: 'Oct', october: 'Oct',
+  nov: 'Nov', november: 'Nov',
+  dec: 'Dec', december: 'Dec',
+};
+const MONTH_PATTERN = Object.keys(MONTHS).sort((a, b) => b.length - a.length).join('|');
 
 function cleanValue(value, fallback = '') {
   if (value === null || value === undefined) return fallback;
-  const text = String(value).trim();
+  const text = String(value).replace(/\s+/g, ' ').trim();
   if (!text) return fallback;
-  if (['n/a', 'undefined', 'null'].includes(text.toLowerCase())) return fallback;
+  if (['n/a', 'undefined', 'null', 'nan', '[object object]'].includes(text.toLowerCase())) return fallback;
   return text;
+}
+
+function formatSerial(value) {
+  const serial = cleanValue(value).replace(/[^a-zA-Z0-9_-]/g, '');
+  return /^\d+$/.test(serial) ? serial.padStart(7, '0') : serial;
 }
 
 function formatCertificateDate(value) {
   if (!value) return '';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return cleanValue(value);
-  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + '.';
 }
 
-function textWidth(font, text, size) {
-  return font.widthOfTextAtSize(String(text || ''), size);
+function formatCgpa(value) {
+  if (value === null || value === undefined) return '';
+  const text = String(value).trim();
+  return text ? cleanValue(text) : '';
 }
 
-function fitText(text, font, size, maxWidth, minSize = 8) {
-  let fittedSize = size;
-  const fittedText = String(text || '');
-  while (fittedText && maxWidth && fittedSize > minSize && textWidth(font, fittedText, fittedSize) > maxWidth) {
-    fittedSize -= 0.35;
-  }
-  return { text: fittedText, size: fittedSize };
-}
-
-function drawDottedLine(page, x, y, width, options = {}) {
-  if (!width || width <= 0) return;
-  const dash = options.dash || 2.1;
-  const gap = options.gap || 2.4;
-  for (let cursor = x; cursor < x + width; cursor += dash + gap) {
-    page.drawLine({
-      start: { x: cursor, y },
-      end: { x: Math.min(cursor + dash, x + width), y },
-      thickness: options.thickness || 0.45,
-      color: options.color || LINE_INK,
-    });
-  }
-}
-
-function drawValueWithUnderline(page, value, options) {
-  const {
-    x,
-    y,
-    width,
-    font,
-    size = CERTIFICATE_LAYOUT.bodyValue.size,
-    minSize = 8,
-    align = 'center',
-    color = INK,
-    placeholder = false,
-  } = options;
-  drawDottedLine(page, x, y - 3.2, width);
-  const text = placeholder ? '' : cleanValue(value);
-  if (!text) return width;
-  const fitted = fitText(text, font, size, width - 8, minSize);
-  const fittedWidth = textWidth(font, fitted.text, fitted.size);
-  const offset = align === 'left'
-    ? 4
-    : align === 'right'
-      ? Math.max(4, width - fittedWidth - 4)
-      : Math.max(4, (width - fittedWidth) / 2);
-  page.drawText(fitted.text, { x: x + offset, y, size: fitted.size, font, color });
-  return width;
-}
-
-function segmentText(segment) {
-  return segment.isValue ? cleanValue(segment.text) : String(segment.text || '');
-}
-
-function drawSegmentsPreserveSpaces(page, segments, { x, y, size, font, valueFont, color = SOFT_INK }) {
-  let cursor = x;
-  segments.forEach((segment) => {
-    if (segment.isValue) {
-      cursor += drawValueWithUnderline(page, segment.text, {
-        x: cursor,
-        y,
-        width: segment.width,
-        font: segment.font || valueFont,
-        size: segment.size || size,
-        align: segment.align || 'center',
-        placeholder: segment.placeholder,
-      });
-      return;
-    }
-    const text = segmentText(segment);
-    if (!text) return;
-    const staticFont = segment.font || font;
-    const staticSize = segment.size || size;
-    page.drawText(text, { x: cursor, y, size: staticSize, font: staticFont, color: segment.color || color });
-    cursor += textWidth(staticFont, text, staticSize);
-  });
-  return cursor - x;
-}
-
-function wrapTextToLines(text, font, size, maxWidth, maxLines = 2) {
-  const words = cleanValue(text).split(/\s+/).filter(Boolean);
-  const lines = [];
-  let current = '';
-  words.forEach((word) => {
-    const next = current ? `${current} ${word}` : word;
-    if (!current || textWidth(font, next, size) <= maxWidth) {
-      current = next;
-      return;
-    }
-    lines.push(current);
-    current = word;
-  });
-  if (current) lines.push(current);
-  if (lines.length <= maxLines) return lines;
-  const visible = lines.slice(0, maxLines);
-  visible[maxLines - 1] = `${visible[maxLines - 1]} ${lines.slice(maxLines).join(' ')}`;
-  return visible;
-}
-
-function drawCenteredText(page, text, { centerX, y, font, size, maxWidth, color = SOFT_INK }) {
-  const fitted = fitText(cleanValue(text), font, size, maxWidth, 7.5);
-  page.drawText(fitted.text, { x: centerX - textWidth(font, fitted.text, fitted.size) / 2, y, size: fitted.size, font, color });
-}
-
-function drawSignatureSection(page, bodyFont) {
-  const { qrCode, examControllerLine, examControllerLabel, chairmanLine, chairmanLabel } = CERTIFICATE_LAYOUT;
-  [examControllerLine, chairmanLine].forEach((line) => {
-    page.drawLine({
-      start: { x: line.x1, y: line.y },
-      end: { x: line.x2, y: line.y2 },
-      thickness: 0.65,
-      color: LINE_INK,
-    });
-  });
-  page.drawText('Exam Controller', { x: examControllerLabel.x, y: examControllerLabel.y, size: examControllerLabel.size, font: bodyFont, color: SOFT_INK });
-  page.drawText('Chairman', { x: chairmanLabel.x, y: chairmanLabel.y, size: chairmanLabel.size, font: bodyFont, color: SOFT_INK });
-  return qrCode;
-}
-
-function drawDisclaimer(page, bodyFont) {
-  drawCenteredText(page, 'This Certificate is issued without any alteration or erasure', {
-    centerX: PAGE.width / 2,
-    y: CERTIFICATE_LAYOUT.disclaimer.y,
-    font: bodyFont,
-    size: CERTIFICATE_LAYOUT.disclaimer.size,
-    maxWidth: 480,
-    color: DISCLAIMER_RED,
-  });
-}
-
-function drawImageFullPage(page, image) {
-  page.drawImage(image, { x: 0, y: 0, width: PAGE.width, height: PAGE.height });
-}
-
-async function embedCertificateFonts(pdfDoc) {
-  if (fontkit && fs.existsSync(DYNAMIC_FONT_PATH) && fs.existsSync(STATIC_FONT_PATH)) {
-    pdfDoc.registerFontkit(fontkit);
-    return {
-      valueFont: await pdfDoc.embedFont(await fs.promises.readFile(DYNAMIC_FONT_PATH), { subset: true }),
-      bodyFont: await pdfDoc.embedFont(await fs.promises.readFile(STATIC_FONT_PATH), { subset: true }),
-    };
-  }
-  return {
-    valueFont: await pdfDoc.embedFont(StandardFonts.TimesRomanBoldItalic),
-    bodyFont: await pdfDoc.embedFont(StandardFonts.TimesRomanItalic),
-  };
-}
-
-function resultDisplay(result) {
+function formatGrade(result, fallbackGrade) {
+  const directGrade = cleanValue(fallbackGrade);
+  if (directGrade) return directGrade;
   const value = cleanValue(result);
-  if (!value) return '';
-  return `${/^[0-9]+(\.[0-9]+)?$/.test(value) ? 'CGPA' : 'Grade'} ${value}`;
+  if (!value || /^\d+(?:\.\d+)?$/.test(value)) return '';
+  return value.replace(/^grade\s*/i, '').trim();
+}
+
+function buildParentDisplay(fatherName, motherName) {
+  const parts = [cleanValue(fatherName), cleanValue(motherName)].filter(Boolean);
+  return parts.join(' & ');
 }
 
 function buildCourseDisplay(courseTitle, courseDuration) {
@@ -243,117 +132,262 @@ function buildCourseDisplay(courseTitle, courseDuration) {
   return title || duration;
 }
 
+function findYear(text, fromEnd = false) {
+  const matches = cleanValue(text).match(/(?:19|20)\d{2}/g);
+  if (!matches || !matches.length) return '';
+  return fromEnd ? matches[matches.length - 1] : matches[0];
+}
+
+function findMonthYear(text, preferLast = true) {
+  const normalized = cleanValue(text);
+  if (!normalized) return null;
+  const monthRegex = new RegExp(`\\b(${MONTH_PATTERN})\\b`, 'gi');
+  const monthMatches = [...normalized.matchAll(monthRegex)];
+  if (!monthMatches.length) return null;
+  const selected = preferLast ? monthMatches[monthMatches.length - 1] : monthMatches[0];
+  const month = MONTHS[selected[1].toLowerCase()];
+  const afterMonth = normalized.slice(selected.index);
+  const year = findYear(afterMonth) || findYear(normalized, true);
+  return year ? { month, year } : null;
+}
+
+function deriveExamMonth({ examMonth, session, passingYear }) {
+  const explicit = cleanValue(examMonth);
+  const explicitMonthYear = findMonthYear(explicit, true);
+  if (explicitMonthYear) return `${explicitMonthYear.month}-${explicitMonthYear.year}`;
+
+  const sessionText = cleanValue(session);
+  const sessionMonthYear = findMonthYear(sessionText, true);
+  if (sessionMonthYear) return `${sessionMonthYear.month}-${sessionMonthYear.year}`;
+
+  const sessionEndYear = findYear(sessionText, true);
+  if (sessionEndYear) return sessionEndYear;
+
+  const explicitYear = findYear(explicit, true);
+  if (explicitYear) return explicitYear;
+
+  return cleanValue(passingYear);
+}
+
+function textWidth(font, text, size) {
+  return font.widthOfTextAtSize(String(text || ''), size);
+}
+
+function fitText(text, font, size, maxWidth, minSize = BODY_MIN_FONT_SIZE) {
+  const fittedText = cleanValue(text);
+  let fittedSize = size;
+  while (fittedText && maxWidth && fittedSize > minSize && textWidth(font, fittedText, fittedSize) > maxWidth) {
+    fittedSize -= 0.35;
+  }
+  fittedSize = Math.max(minSize, fittedSize);
+  const fittedWidth = textWidth(font, fittedText, fittedSize);
+  return { text: fittedText, size: fittedSize, width: fittedWidth, overflow: Boolean(fittedText && maxWidth && fittedWidth > maxWidth) };
+}
+
+function drawDottedLine(page, x, y, width, options = {}) {
+  if (!width || width <= 0) return;
+  const dash = options.dash || DOT_LENGTH;
+  const gap = options.gap || DOT_GAP;
+  for (let cursor = x; cursor < x + width; cursor += dash + gap) {
+    page.drawLine({
+      start: { x: cursor, y },
+      end: { x: Math.min(cursor + dash, x + width), y },
+      thickness: options.thickness || UNDERLINE_THICKNESS,
+      color: options.color || LINE_INK,
+    });
+  }
+}
+
+function drawValueWithUnderline(page, value, options) {
+  const { x, y, width, font, size, minSize = BODY_MIN_FONT_SIZE, align = 'center', color = INK } = options;
+  drawDottedLine(page, x, y - UNDERLINE_OFFSET, width);
+  const text = cleanValue(value);
+  if (!text) return { endX: x + width, overflow: false, fittedSize: size };
+  const fitted = fitText(text, font, size, width - pxToPt(8), minSize);
+  const offset = align === 'left'
+    ? pxToPt(4)
+    : align === 'right'
+      ? Math.max(pxToPt(4), width - fitted.width - pxToPt(4))
+      : Math.max(pxToPt(4), (width - fitted.width) / 2);
+  page.drawText(fitted.text, { x: x + offset, y, size: fitted.size, font, color });
+  return { endX: x + width, overflow: fitted.overflow, fittedSize: fitted.size };
+}
+
+function drawText(page, text, options) {
+  const { x, y, font, size, color = SOFT_INK, maxWidth, minSize = BODY_MIN_FONT_SIZE, align = 'left' } = options;
+  const fitted = maxWidth ? fitText(text, font, size, maxWidth, minSize) : { text: cleanValue(text), size, width: textWidth(font, cleanValue(text), size), overflow: false };
+  if (!fitted.text) return { width: 0, overflow: false };
+  const offset = align === 'right' ? Math.max(0, (maxWidth || fitted.width) - fitted.width) : align === 'center' ? Math.max(0, ((maxWidth || fitted.width) - fitted.width) / 2) : 0;
+  page.drawText(fitted.text, { x: x + offset, y, size: fitted.size, font, color });
+  return { width: fitted.width, overflow: fitted.overflow, fittedSize: fitted.size };
+}
+
+function drawCenteredText(page, text, { centerX, y, font, size, maxWidth, color = SOFT_INK }) {
+  const fitted = fitText(text, font, size, maxWidth, pxToPt(10));
+  if (!fitted.text) return;
+  page.drawText(fitted.text, { x: centerX - fitted.width / 2, y, size: fitted.size, font, color });
+}
+
+function bodyBounds() {
+  const left = CERTIFICATE_LAYOUT.safeLeft + CERTIFICATE_LAYOUT.body.inset;
+  const right = CERTIFICATE_LAYOUT.safeRight - CERTIFICATE_LAYOUT.body.inset;
+  return { left, right, width: right - left };
+}
+
+function drawJustifiedLabelValueLine(page, { y, label, value }, fonts) {
+  const { left, right } = bodyBounds();
+  const size = CERTIFICATE_LAYOUT.body.fontSize;
+  const labelWidth = textWidth(fonts.staticBodyFont, label, size);
+  const valueX = left + labelWidth + INLINE_GAP;
+  const valueWidth = Math.max(0, right - valueX);
+  drawText(page, label, { x: left, y, font: fonts.staticBodyFont, size });
+  drawValueWithUnderline(page, value, { x: valueX, y, width: valueWidth, font: fonts.dynamicFont, size });
+}
+
+function drawExamGradeLine(page, { y, examMonth, grade }, fonts) {
+  const { left, right } = bodyBounds();
+  const size = CERTIFICATE_LAYOUT.body.fontSize;
+  const examLabel = 'Examination Held in the Month of';
+  const gradeLabel = 'He/She Secured Grade';
+  const examLabelWidth = textWidth(fonts.staticBodyFont, examLabel, size);
+  const gradeLabelWidth = textWidth(fonts.staticBodyFont, gradeLabel, size);
+  const compactGradeWidth = pxToPt(72);
+  const examX = left + examLabelWidth + INLINE_GAP;
+  const gradeValueX = right - compactGradeWidth;
+  const gradeLabelX = gradeValueX - INLINE_GAP - gradeLabelWidth;
+  const examWidth = Math.max(pxToPt(95), gradeLabelX - INLINE_GAP - examX);
+
+  drawText(page, examLabel, { x: left, y, font: fonts.staticBodyFont, size });
+  drawValueWithUnderline(page, examMonth, { x: examX, y, width: examWidth, font: fonts.dynamicFont, size });
+  drawText(page, gradeLabel, { x: gradeLabelX, y, font: fonts.staticBodyFont, size });
+  drawValueWithUnderline(page, grade, { x: gradeValueX, y, width: compactGradeWidth, font: fonts.dynamicFont, size });
+}
+
+function drawCgpaLine(page, { y, cgpa }, fonts) {
+  const { left, right } = bodyBounds();
+  const size = CERTIFICATE_LAYOUT.body.fontSize;
+  const label = 'His/Her C.G.P.A';
+  const scaleText = 'on a scale of 4.00.';
+  const labelWidth = textWidth(fonts.staticBodyFont, label, size);
+  const scaleWidth = textWidth(fonts.staticBodyFont, scaleText, size);
+  const cgpaX = left + labelWidth + INLINE_GAP;
+  const scaleX = right - scaleWidth;
+  const cgpaWidth = Math.max(pxToPt(72), scaleX - INLINE_GAP - cgpaX);
+
+  drawText(page, label, { x: left, y, font: fonts.staticBodyFont, size });
+  drawValueWithUnderline(page, cgpa, { x: cgpaX, y, width: cgpaWidth, font: fonts.dynamicFont, size });
+  drawText(page, scaleText, { x: scaleX, y, font: fonts.staticBodyFont, size });
+}
+
+function drawBottomSection(page, normalFont, values) {
+  const layout = CERTIFICATE_LAYOUT.bottom;
+  const dateX = layout.x;
+  const comparedX = dateX + CERTIFICATE_LAYOUT.dates.width + layout.gap;
+  const qrX = comparedX + CERTIFICATE_LAYOUT.compared.width + layout.gap;
+  const controllerX = qrX + CERTIFICATE_LAYOUT.qrCode.width + layout.gap;
+  const labelY = layout.y;
+  const lineY = labelY + pxToPt(22.5);
+  const dateTopY = labelY + pxToPt(36);
+
+  drawText(page, 'Date of Publication of Result:', { x: dateX, y: dateTopY, font: normalFont, size: CERTIFICATE_LAYOUT.dates.size });
+  drawText(page, values.publicationDate, { x: dateX + pxToPt(176), y: dateTopY, font: normalFont, size: CERTIFICATE_LAYOUT.dates.size, maxWidth: pxToPt(96), minSize: pxToPt(10), color: INK });
+  drawText(page, 'Date of Issue:', { x: dateX, y: dateTopY - CERTIFICATE_LAYOUT.dates.lineGap, font: normalFont, size: CERTIFICATE_LAYOUT.dates.size });
+  drawText(page, values.issueDate, { x: dateX + pxToPt(91), y: dateTopY - CERTIFICATE_LAYOUT.dates.lineGap, font: normalFont, size: CERTIFICATE_LAYOUT.dates.size, maxWidth: pxToPt(126), minSize: pxToPt(10), color: INK });
+
+  [
+    { x: comparedX, width: CERTIFICATE_LAYOUT.compared.width, label: 'Compared by' },
+    { x: controllerX, width: CERTIFICATE_LAYOUT.controller.width, label: 'Deputy/Controller of Examinations' },
+  ].forEach((signature) => {
+    page.drawLine({ start: { x: signature.x + pxToPt(11), y: lineY }, end: { x: signature.x + signature.width - pxToPt(11), y: lineY }, thickness: 0.65, color: LINE_INK });
+    drawCenteredText(page, signature.label, { centerX: signature.x + signature.width / 2, y: labelY, font: normalFont, size: pxToPt(13.5), maxWidth: signature.width - pxToPt(11) });
+  });
+
+  return { x: qrX, y: labelY - pxToPt(1), width: CERTIFICATE_LAYOUT.qrCode.width, height: CERTIFICATE_LAYOUT.qrCode.height };
+}
+
+async function readRequiredFont(fontPath, label) {
+  try {
+    return await fs.promises.readFile(fontPath);
+  } catch (error) {
+    console.error(`Certificate PDF font error: unable to read ${label} font at ${fontPath}`, error);
+    throw new Error(`Certificate PDF font missing or unreadable: ${path.basename(fontPath)}`);
+  }
+}
+
+async function embedCertificateFonts(pdfDoc) {
+  if (!fontkit) {
+    console.error('Certificate PDF font error: @pdf-lib/fontkit is not available.');
+    throw new Error('Certificate PDF font embedding is unavailable. Please install @pdf-lib/fontkit.');
+  }
+
+  pdfDoc.registerFontkit(fontkit);
+  try {
+    const [dynamicFontBytes, staticFontBytes] = await Promise.all([
+      readRequiredFont(DYNAMIC_FONT_PATH, 'dynamic'),
+      readRequiredFont(STATIC_FONT_PATH, 'static'),
+    ]);
+    return {
+      dynamicFont: await pdfDoc.embedFont(dynamicFontBytes, { subset: true }),
+      staticBodyFont: await pdfDoc.embedFont(staticFontBytes, { subset: true }),
+      normalFont: await pdfDoc.embedFont(StandardFonts.TimesRoman),
+    };
+  } catch (error) {
+    if (String(error.message || '').indexOf('Certificate PDF font') !== -1) throw error;
+    console.error('Certificate PDF font error: unable to embed certificate fonts.', error);
+    throw new Error('Certificate PDF font files are invalid or cannot be embedded.');
+  }
+}
+
 class CertificatePdfService {
   static async generate(certificate) {
     const safeSerial = String(certificate.serial_no || '').replace(/[^a-zA-Z0-9_-]/g, '');
     if (!safeSerial) throw new Error('Invalid certificate serial number for PDF generation.');
     if (!fs.existsSync(TEMPLATE_IMAGE_PATH)) throw new Error(TEMPLATE_IMAGE_MISSING_MESSAGE);
 
-    await fs.promises.mkdir(GENERATED_DIR, { recursive: true });
-    const qr = await CertificateQrService.generate(safeSerial);
     const pdfDoc = await PDFDocument.create();
     const templateImage = await pdfDoc.embedPng(await fs.promises.readFile(TEMPLATE_IMAGE_PATH));
+    const templateScale = {
+      scaleX: PAGE.width / templateImage.width,
+      scaleY: PAGE.height / templateImage.height,
+      templatePxToPdfX: (px) => Number(px) * (PAGE.width / templateImage.width),
+      templatePxToPdfY: (px) => Number(px) * (PAGE.height / templateImage.height),
+    };
+    void templateScale; // Template scale is calculated for artwork-relative measurements; current layout constants are PDF/CSS-point based.
     const page = pdfDoc.addPage([PAGE.width, PAGE.height]);
-    drawImageFullPage(page, templateImage);
+    page.drawImage(templateImage, { x: 0, y: 0, width: PAGE.width, height: PAGE.height });
 
-    const { bodyFont, valueFont } = await embedCertificateFonts(pdfDoc);
+    const { staticBodyFont, dynamicFont, normalFont } = await embedCertificateFonts(pdfDoc);
+    await fs.promises.mkdir(GENERATED_DIR, { recursive: true });
+    const qr = await CertificateQrService.generate(safeSerial);
     const layout = CERTIFICATE_LAYOUT;
     const studentName = cleanValue(certificate.s_name);
-    const fatherName = cleanValue(certificate.f_name);
-    const motherName = cleanValue(certificate.m_name);
-    const instituteName = cleanValue(certificate.institute_name, 'National Youth Technical Training Center');
-    const rollNo = cleanValue(certificate.roll_no || certificate.serial_no);
+    const parentNames = buildParentDisplay(certificate.f_name, certificate.m_name);
     const courseDisplay = buildCourseDisplay(certificate.course_title, certificate.course_duration);
-    const examPeriod = cleanValue(certificate.exam_month) || cleanValue(certificate.passing_year);
-    const passportNo = cleanValue(certificate.passport_no);
+    const examPeriod = deriveExamMonth({ examMonth: certificate.exam_month, session: certificate.session, passingYear: certificate.passing_year });
+    const grade = formatGrade(certificate.result, certificate.grade);
+    const cgpa = formatCgpa(certificate.cgpa);
     const issueDate = formatCertificateDate(certificate.issue_date) || formatCertificateDate(new Date().toISOString().slice(0, 10));
-    const resultText = resultDisplay(certificate.result);
+    const publicationDate = formatCertificateDate(certificate.publication_date || certificate.result_publication_date || certificate.published_at);
 
-    drawSegmentsPreserveSpaces(page, [
-      { text: 'SL No : ', size: layout.serial.size },
-      { text: safeSerial, isValue: true, width: layout.serial.valueWidth, size: layout.serial.size, align: 'left' },
-    ], { x: layout.serial.x, y: layout.serial.y, size: layout.serial.size, font: bodyFont, valueFont });
+    drawText(page, 'SL No-', { x: layout.serial.x, y: layout.serial.y, font: normalFont, size: layout.serial.size });
+    drawValueWithUnderline(page, formatSerial(safeSerial), { x: layout.serial.x + pxToPt(58), y: layout.serial.y, width: layout.serial.valueWidth, font: dynamicFont, size: layout.serial.size, minSize: pxToPt(12), align: 'left' });
 
-    page.drawText('Reg. No :', { x: layout.regLabel.x, y: layout.regLabel.y, size: layout.regLabel.size, font: bodyFont, color: SOFT_INK });
-    drawValueWithUnderline(page, cleanValue(certificate.reg_no || certificate.id), { x: layout.regValue.x, y: layout.regValue.y, width: layout.regValue.width, size: layout.regValue.size, font: valueFont, align: 'left' });
-    page.drawText('Session :', { x: layout.sessionLabel.x, y: layout.sessionLabel.y, size: layout.sessionLabel.size, font: bodyFont, color: SOFT_INK });
-    drawValueWithUnderline(page, cleanValue(certificate.session), { x: layout.sessionValue.x, y: layout.sessionValue.y, width: layout.sessionValue.width, size: layout.sessionValue.size, font: valueFont, align: 'left' });
+    drawText(page, 'Registration No.', { x: layout.meta.labelX, y: layout.meta.y, font: normalFont, size: layout.meta.size, maxWidth: layout.meta.labelWidth, align: 'right' });
+    drawValueWithUnderline(page, cleanValue(certificate.reg_no || certificate.id), { x: layout.meta.valueX, y: layout.meta.y, width: layout.meta.valueWidth, font: dynamicFont, size: layout.meta.size, minSize: pxToPt(10), align: 'left' });
+    drawText(page, 'Session.', { x: layout.meta.labelX, y: layout.meta.y - layout.meta.rowGap, font: normalFont, size: layout.meta.size, maxWidth: layout.meta.labelWidth, align: 'right' });
+    drawValueWithUnderline(page, cleanValue(certificate.session), { x: layout.meta.valueX, y: layout.meta.y - layout.meta.rowGap, width: layout.meta.valueWidth, font: dynamicFont, size: layout.meta.size, minSize: pxToPt(10), align: 'left' });
 
-    drawSegmentsPreserveSpaces(page, [
-      { text: 'This is to certify that ', size: 15 },
-      { text: studentName, isValue: true, width: layout.studentName.width, size: layout.studentName.size },
-    ], { x: layout.bodyLeft, y: layout.line1Y, size: layout.bodyStatic.size, font: bodyFont, valueFont });
+    const y = layout.body.y;
+    const fonts = { staticBodyFont, dynamicFont };
+    drawJustifiedLabelValueLine(page, { y, label: 'This Is To Certify That', value: studentName }, fonts);
+    drawJustifiedLabelValueLine(page, { y: y - layout.body.rowGap, label: 'Son/Daughter of', value: parentNames }, fonts);
+    drawJustifiedLabelValueLine(page, { y: y - layout.body.rowGap * 2, label: 'He/She Successfully Completed The', value: courseDisplay }, fonts);
+    drawExamGradeLine(page, { y: y - layout.body.rowGap * 3, examMonth: examPeriod, grade }, fonts);
+    drawCgpaLine(page, { y: y - layout.body.rowGap * 4, cgpa }, fonts);
 
-    drawSegmentsPreserveSpaces(page, [
-      { text: 'Son/daughter of ', size: layout.bodyStatic.size },
-      { text: fatherName, isValue: true, width: 350, size: layout.bodyValue.size, align: 'center' },
-      { text: '          (Father)', size: 12 },
-    ], { x: layout.bodyLeft, y: layout.fatherLineY, size: layout.bodyStatic.size, font: bodyFont, valueFont });
-
-    drawSegmentsPreserveSpaces(page, [
-      { text: 'and ', size: layout.bodyStatic.size },
-      { text: motherName, isValue: true, width: 450, size: layout.bodyValue.size, align: 'center' },
-      { text: '          (Mother)', size: 12 },
-    ], { x: layout.bodyLeft, y: layout.motherLineY, size: layout.bodyStatic.size, font: bodyFont, valueFont });
-
-    drawSegmentsPreserveSpaces(page, [
-      { text: 'of ', size: layout.bodyStatic.size },
-      { text: instituteName, isValue: true, width: 502, size: layout.bodyValue.size, align: 'center' },
-    ], { x: layout.bodyLeft, y: layout.instituteLineY, size: layout.bodyStatic.size, font: bodyFont, valueFont });
-
-    drawSegmentsPreserveSpaces(page, [
-      { text: 'bearing Roll No. ', size: 13.6 },
-      { text: rollNo, isValue: true, width: 118, size: 14, align: 'center' },
-      { text: ' duly passed the', size: 13.6 },
-    ], { x: layout.bodyLeft, y: layout.courseLine1Y, size: layout.bodyStatic.size, font: bodyFont, valueFont });
-
-    const courseLines = wrapTextToLines(courseDisplay, valueFont, 13.8, layout.bodyRight - 305, 2);
-    courseLines.forEach((line, index) => {
-      drawValueWithUnderline(page, line, {
-        x: 305,
-        y: layout.courseLine2Y - index * 18,
-        width: layout.bodyRight - 305,
-        font: valueFont,
-        size: 13.8,
-      });
-    });
-
-    const examY = courseLines.length > 1 ? layout.examLineY - 12 : layout.examLineY;
-    const examSegments = [
-      { text: 'Course Examination held in the month/year of ', size: 11.6 },
-      { text: examPeriod, isValue: true, width: 100, size: 12.6, align: 'center' },
-    ];
-    if (resultText) {
-      examSegments.push(
-        { text: ' and he/she secured ', size: 11.6 },
-        { text: resultText, isValue: true, width: 92, size: 12.8, align: 'center' },
-      );
-    }
-    drawSegmentsPreserveSpaces(page, examSegments, { x: layout.bodyLeft, y: examY, size: 11.6, font: bodyFont, valueFont });
-
-    drawCenteredText(page, 'On the scale of 4.00 at Under the "Education Program" National Youth Technical Training Center', {
-      centerX: (layout.bodyLeft + layout.bodyRight) / 2,
-      y: layout.scaleLineY,
-      font: bodyFont,
-      size: 12.2,
-      maxWidth: layout.bodyRight - layout.bodyLeft,
-    });
-
-    drawSegmentsPreserveSpaces(page, [
-      { text: 'Passport No. ', size: 11.8 },
-      { text: passportNo, isValue: true, width: 128, size: 12.5, placeholder: !passportNo },
-    ], { x: layout.bodyLeft, y: layout.passportLineY, size: 11.8, font: bodyFont, valueFont });
-
-    drawSegmentsPreserveSpaces(page, [
-      { text: 'Issue Date: ', size: layout.issueDate.size },
-      { text: issueDate, isValue: true, width: layout.issueDate.valueWidth, size: layout.issueDate.size, align: 'left' },
-    ], { x: layout.issueDate.x, y: layout.issueDate.y, size: layout.issueDate.size, font: bodyFont, valueFont });
-
+    const qrPlacement = drawBottomSection(page, normalFont, { issueDate, publicationDate });
     const qrImage = await pdfDoc.embedPng(await fs.promises.readFile(qr.absolutePath));
-    page.drawImage(qrImage, layout.qrCode);
-    drawSignatureSection(page, bodyFont);
-    drawDisclaimer(page, bodyFont);
-
+    page.drawImage(qrImage, qrPlacement);
     const fileName = `certificate-${safeSerial}.pdf`;
     const absolutePath = path.join(GENERATED_DIR, fileName);
     const publicPath = `${PUBLIC_GENERATED_DIR}/${fileName}`;
