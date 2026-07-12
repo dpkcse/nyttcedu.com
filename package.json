@@ -7,6 +7,7 @@
     "stop-win": "Taskkill /IM node.exe /F"
   },
   "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
     "async-each": "^1.0.3",
     "bcryptjs": "^2.4.3",
     "connect-flash": "^0.1.1",
@@ -30,12 +31,11 @@
     "nodemailer": "^6.4.17",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
-    "pm2": "^4.5.1",
-    "rand-token": "^1.0.1",
-    "terminal-link": "^2.1.1",
     "pdf-lib": "^1.17.1",
+    "pm2": "^4.5.1",
     "qrcode": "^1.5.4",
-    "@pdf-lib/fontkit": "^1.1.1"
+    "rand-token": "^1.0.1",
+    "terminal-link": "^2.1.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.22",
