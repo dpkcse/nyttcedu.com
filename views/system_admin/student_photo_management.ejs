@@ -1,0 +1,123 @@
+<%- include('system_layouts/s_head') %>
+<div class="container-fluid">
+        <%- include('system_layouts/s_breadcumb') %>
+        <%- include('system_layouts/s_message') %>
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h4 class="card-title mb-3">Student Photo Management</h4>
+            <p class="text-muted">Search by exact or partial Serial Number / Student Name, then verify details before updating the photo.</p>
+            <div class="form-row align-items-end">
+              <div class="col-md-9 mb-2">
+                <label for="studentSearch">Search Student</label>
+                <input type="text" id="studentSearch" class="form-control" placeholder="Search by Serial Number or Student Name" autocomplete="off" />
+                <small class="form-text text-muted">Enter at least 2 characters. Exact serial number matches are shown first.</small>
+              </div>
+              <div class="col-md-3 mb-2">
+                <button id="searchBtn" type="button" class="btn btn-primary btn-block">Search Student</button>
+              </div>
+            </div>
+            <div id="searchAlert" class="alert d-none mt-3"></div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="mb-0">Search Results</h5>
+              <span id="resultCount" class="badge badge-secondary">0</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover mb-0">
+                <thead class="thead-light">
+                  <tr>
+                    <th>Photo</th><th>Serial Number</th><th>Registration Number</th><th>Student Name</th><th>Father's Name</th><th>Course / Trade</th><th>Session</th><th>Status</th><th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="resultsBody"><tr><td colspan="9" class="text-center text-muted">No search executed.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="managePanel" class="card shadow-sm d-none">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+              <h5 class="mb-2">Manage Photo</h5>
+              <button type="button" id="cancelManage" class="btn btn-light btn-sm">Cancel</button>
+            </div>
+            <div id="manageAlert" class="alert d-none"></div>
+            <div class="row">
+              <div class="col-lg-7">
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered">
+                    <tbody id="studentInfo"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="col-lg-5">
+                <div class="row">
+                  <div class="col-sm-6 text-center mb-3">
+                    <strong>Current Photo</strong>
+                    <div id="currentPhoto" class="border rounded p-2 mt-2 photo-box">No student photo uploaded</div>
+                  </div>
+                  <div class="col-sm-6 text-center mb-3">
+                    <strong>New Photo Preview</strong>
+                    <div id="newPreview" class="border rounded p-2 mt-2 photo-box text-muted">No new photo selected</div>
+                  </div>
+                </div>
+                <% if (can_manage_photos) { %>
+                <form id="photoForm" enctype="multipart/form-data">
+                  <input type="file" name="photo" id="photoInput" class="form-control-file" accept="image/jpeg,image/png,image/webp" />
+                  <small class="form-text text-muted mb-3">Recommended: passport-style photo, 3:4 ratio, JPG/PNG/WEBP, maximum 2 MB.</small>
+                  <button type="submit" id="savePhoto" class="btn btn-success">Save Photo</button>
+                  <button type="button" id="clearSelection" class="btn btn-secondary">Cancel</button>
+                  <button type="button" id="removePhoto" class="btn btn-danger d-none">Remove Photo</button>
+                </form>
+                <% } else { %>
+                  <div class="alert alert-warning">You do not have permission to upload, replace, or remove photos.</div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+</div>
+<style>
+.photo-thumb{width:54px;height:72px;object-fit:cover;border-radius:4px}.photo-box{min-height:170px;display:flex;align-items:center;justify-content:center;overflow:hidden}.photo-box img{max-width:100%;max-height:260px;object-fit:contain}@media(max-width:575px){.photo-box{min-height:130px}.btn{margin-bottom:6px}}
+</style>
+<script>
+(function(){
+  var selectedStudent = null;
+  function esc(v){ return $('<div>').text(v || '').html(); }
+  function alertBox(id, type, msg){ $(id).removeClass('d-none alert-success alert-danger alert-warning alert-info').addClass('alert-'+type).text(msg); }
+  function clearAlert(id){ $(id).addClass('d-none').text(''); }
+  function noPhoto(){ return '<span class="text-muted">No student photo uploaded</span>'; }
+  function thumb(s){ return s.photo_url ? '<img class="photo-thumb" src="'+esc(s.photo_url)+'" alt="Student photo" />' : '<span class="text-muted">No photo</span>'; }
+  function renderRows(rows){
+    $('#resultCount').text(rows.length);
+    if(!rows.length){ $('#resultsBody').html('<tr><td colspan="9" class="text-center text-muted">No results found.</td></tr>'); return; }
+    $('#resultsBody').html(rows.map(function(s){ return '<tr><td>'+thumb(s)+'</td><td>'+esc(s.serial_no)+'</td><td>'+esc(s.registration_no)+'</td><td>'+esc(s.s_name)+'</td><td>'+esc(s.f_name)+'</td><td>'+esc(s.course_title)+'</td><td>'+esc(s.session)+'</td><td>'+esc(s.status)+'</td><td><button type="button" class="btn btn-info btn-sm manage-btn" data-id="'+s.id+'">Manage Photo</button></td></tr>'; }).join(''));
+  }
+  $('#searchBtn').on('click', function(){
+    clearAlert('#searchAlert'); var q=$('#studentSearch').val().trim();
+    if(!q){ alertBox('#searchAlert','warning','Search term is required.'); return; }
+    if(q.length<2){ alertBox('#searchAlert','warning','Please enter at least 2 characters.'); return; }
+    $('#resultsBody').html('<tr><td colspan="9" class="text-center text-muted">Loading...</td></tr>');
+    $.get('/certificate/student-photos/search',{q:q}).done(function(res){ renderRows(res.result || []); if(!(res.result||[]).length) alertBox('#searchAlert','info','No students found.'); }).fail(function(xhr){ renderRows([]); alertBox('#searchAlert','danger',(xhr.responseJSON&&xhr.responseJSON.errMsg)||'Server error.'); });
+  });
+  $('#studentSearch').on('keypress', function(e){ if(e.which===13) $('#searchBtn').click(); });
+  $(document).on('click','.manage-btn', function(){
+    clearAlert('#manageAlert'); $.get('/certificate/student-photos/'+$(this).data('id')).done(function(res){
+      selectedStudent=res.result; $('#managePanel').removeClass('d-none');
+      $('#studentInfo').html(['serial_no:Serial Number','registration_no:Registration Number','s_name:Student Name','f_name:Father\'s Name','m_name:Mother\'s Name','course_title:Course / Trade','session:Session','result:Result / Status'].map(function(x){var p=x.split(':'); return '<tr><th>'+p[1]+'</th><td>'+esc(selectedStudent[p[0]])+'</td></tr>';}).join(''));
+      $('#currentPhoto').html(selectedStudent.photo_url ? '<img src="'+esc(selectedStudent.photo_url)+'" alt="Current student photo" />' : noPhoto());
+      $('#removePhoto').toggleClass('d-none', !selectedStudent.photo_url); $('#newPreview').html('<span class="text-muted">No new photo selected</span>'); $('#photoInput').val('');
+      $('html,body').animate({scrollTop:$('#managePanel').offset().top-80},250);
+    }).fail(function(){ alertBox('#searchAlert','danger','Student record was not found.'); });
+  });
+  $('#photoInput').on('change', function(){ var f=this.files[0]; if(!f){$('#newPreview').html('<span class="text-muted">No new photo selected</span>');return;} if(f.size>2097152){alertBox('#manageAlert','danger','The selected image must not exceed 2 MB.'); this.value=''; return;} if(['image/jpeg','image/png','image/webp'].indexOf(f.type)<0){alertBox('#manageAlert','danger','Please select a valid image file.'); this.value=''; return;} var r=new FileReader(); r.onload=function(e){$('#newPreview').html('<img src="'+e.target.result+'" alt="New photo preview" />')}; r.readAsDataURL(f); });
+  $('#clearSelection,#cancelManage').on('click', function(){ $('#photoInput').val(''); $('#newPreview').html('<span class="text-muted">No new photo selected</span>'); if(this.id==='cancelManage') $('#managePanel').addClass('d-none'); });
+  $('#photoForm').on('submit', function(e){ e.preventDefault(); clearAlert('#manageAlert'); if(!selectedStudent){return;} if(!$('#photoInput')[0].files.length){ alertBox('#manageAlert','warning','Please select a valid image file.'); return; } var fd=new FormData(this); $('#savePhoto').prop('disabled',true).text('Saving...'); $.ajax({url:'/certificate/student-photos/'+selectedStudent.id+'/photo',method:'POST',data:fd,processData:false,contentType:false}).done(function(res){ alertBox('#manageAlert','success',res.message || res.sucMsg); selectedStudent.photo_url=res.result.photo_url; $('#currentPhoto').html('<img src="'+esc(selectedStudent.photo_url)+'" alt="Current student photo" />'); $('#removePhoto').removeClass('d-none'); $('#photoInput').val(''); $('#newPreview').html('<span class="text-muted">No new photo selected</span>'); }).fail(function(xhr){ alertBox('#manageAlert','danger',(xhr.responseJSON&&xhr.responseJSON.errMsg)||'Photo update failed. The existing photo was not changed.'); }).always(function(){ $('#savePhoto').prop('disabled',false).text('Save Photo'); }); });
+  $('#removePhoto').on('click', function(){ if(!selectedStudent || !confirm('Are you sure you want to remove this student’s photo?')) return; $.ajax({url:'/certificate/student-photos/'+selectedStudent.id+'/photo',method:'DELETE'}).done(function(res){ alertBox('#manageAlert','success',res.message || res.sucMsg); selectedStudent.photo_url=''; $('#currentPhoto').html(noPhoto()); $('#removePhoto').addClass('d-none'); }).fail(function(xhr){ alertBox('#manageAlert','danger',(xhr.responseJSON&&xhr.responseJSON.errMsg)||'Server error.'); }); });
+})();
+</script>
+<%- include('system_layouts/s_foot') %>
