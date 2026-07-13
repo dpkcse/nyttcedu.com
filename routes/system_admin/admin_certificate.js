@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const { forwardAuthenticated, ensureAuthenticated } = require("../../config/auth");
 const AdminCertificateController = require('../../controllers/system_admin/AdminCertificateController');
+const StudentPhotoController = require('../../controllers/system_admin/StudentPhotoController');
 
 //certificate
 // router.get('/', ensureAuthenticated, AdminCertificateController.AddCertificateOldwayGetView);
@@ -10,6 +11,14 @@ router.get('/add-certificate-old-way', ensureAuthenticated, AdminCertificateCont
 router.post('/add-certificate-old-way', ensureAuthenticated, AdminCertificateController.SaveCertificateOldWay);
 
 router.get('/search-old-way', ensureAuthenticated, AdminCertificateController.SearchCertificateGet);
+
+router.get('/student-photos', ensureAuthenticated, StudentPhotoController.index);
+router.get('/student-photos/search', ensureAuthenticated, StudentPhotoController.search);
+router.get('/student-photos/:id', ensureAuthenticated, StudentPhotoController.show);
+router.post('/student-photos/:id/photo', ensureAuthenticated, StudentPhotoController.upload);
+router.put('/student-photos/:id/photo', ensureAuthenticated, StudentPhotoController.upload);
+router.delete('/student-photos/:id/photo', ensureAuthenticated, StudentPhotoController.remove);
+
 router.post('/search-old-way', ensureAuthenticated, AdminCertificateController.FoundCertificateView);
 
 router.post('/edit-request', ensureAuthenticated, AdminCertificateController.CertificateEditRequest);
