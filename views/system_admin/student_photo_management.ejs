@@ -6,16 +6,16 @@
           <div class="card-body">
             <h4 class="card-title mb-3">Student Photo Management</h4>
             <p class="text-muted">Search by exact or partial Serial Number / Student Name, then verify details before updating the photo.</p>
-            <div class="form-row align-items-end">
+            <form id="studentPhotoSearchForm" class="form-row align-items-end">
               <div class="col-md-9 mb-2">
                 <label for="studentSearch">Search Student</label>
                 <input type="text" id="studentSearch" class="form-control" placeholder="Search by Serial Number or Student Name" autocomplete="off" />
                 <small class="form-text text-muted">Enter at least 2 characters. Exact serial number matches are shown first.</small>
               </div>
               <div class="col-md-3 mb-2">
-                <button id="searchBtn" type="button" class="btn btn-primary btn-block">Search Student</button>
+                <button id="searchBtn" type="submit" class="btn btn-primary btn-block">Search Student</button>
               </div>
-            </div>
+            </form>
             <div id="searchAlert" class="alert d-none mt-3"></div>
           </div>
         </div>
@@ -85,39 +85,301 @@
 .photo-thumb{width:54px;height:72px;object-fit:cover;border-radius:4px}.photo-box{min-height:170px;display:flex;align-items:center;justify-content:center;overflow:hidden}.photo-box img{max-width:100%;max-height:260px;object-fit:contain}@media(max-width:575px){.photo-box{min-height:130px}.btn{margin-bottom:6px}}
 </style>
 <script>
-(function(){
+document.addEventListener('DOMContentLoaded', function () {
   var selectedStudent = null;
-  function esc(v){ return $('<div>').text(v || '').html(); }
-  function alertBox(id, type, msg){ $(id).removeClass('d-none alert-success alert-danger alert-warning alert-info').addClass('alert-'+type).text(msg); }
-  function clearAlert(id){ $(id).addClass('d-none').text(''); }
-  function noPhoto(){ return '<span class="text-muted">No student photo uploaded</span>'; }
-  function thumb(s){ return s.photo_url ? '<img class="photo-thumb" src="'+esc(s.photo_url)+'" alt="Student photo" />' : '<span class="text-muted">No photo</span>'; }
-  function renderRows(rows){
-    $('#resultCount').text(rows.length);
-    if(!rows.length){ $('#resultsBody').html('<tr><td colspan="9" class="text-center text-muted">No results found.</td></tr>'); return; }
-    $('#resultsBody').html(rows.map(function(s){ return '<tr><td>'+thumb(s)+'</td><td>'+esc(s.serial_no)+'</td><td>'+esc(s.registration_no)+'</td><td>'+esc(s.s_name)+'</td><td>'+esc(s.f_name)+'</td><td>'+esc(s.course_title)+'</td><td>'+esc(s.session)+'</td><td>'+esc(s.status)+'</td><td><button type="button" class="btn btn-info btn-sm manage-btn" data-id="'+s.id+'">Manage Photo</button></td></tr>'; }).join(''));
+  var activeSearchController = null;
+  var isSearchLoading = false;
+
+  var searchForm = document.getElementById('studentPhotoSearchForm');
+  var searchInput = document.getElementById('studentSearch');
+  var searchBtn = document.getElementById('searchBtn');
+  var searchAlert = document.getElementById('searchAlert');
+  var resultCount = document.getElementById('resultCount');
+  var resultsBody = document.getElementById('resultsBody');
+  var managePanel = document.getElementById('managePanel');
+  var manageAlert = document.getElementById('manageAlert');
+  var studentInfo = document.getElementById('studentInfo');
+  var currentPhoto = document.getElementById('currentPhoto');
+  var newPreview = document.getElementById('newPreview');
+  var photoForm = document.getElementById('photoForm');
+  var photoInput = document.getElementById('photoInput');
+  var savePhoto = document.getElementById('savePhoto');
+  var clearSelection = document.getElementById('clearSelection');
+  var cancelManage = document.getElementById('cancelManage');
+  var removePhoto = document.getElementById('removePhoto');
+
+  if (!searchForm || !searchInput || !searchBtn || !searchAlert || !resultCount || !resultsBody) {
+    console.error('Student Photo Management search form elements were not found.');
+    return;
   }
-  $('#searchBtn').on('click', function(){
-    clearAlert('#searchAlert'); var q=$('#studentSearch').val().trim();
-    if(!q){ alertBox('#searchAlert','warning','Search term is required.'); return; }
-    if(q.length<2){ alertBox('#searchAlert','warning','Please enter at least 2 characters.'); return; }
-    $('#resultsBody').html('<tr><td colspan="9" class="text-center text-muted">Loading...</td></tr>');
-    $.get('/certificate/student-photos/search',{q:q}).done(function(res){ renderRows(res.result || []); if(!(res.result||[]).length) alertBox('#searchAlert','info','No students found.'); }).fail(function(xhr){ renderRows([]); alertBox('#searchAlert','danger',(xhr.responseJSON&&xhr.responseJSON.errMsg)||'Server error.'); });
+
+  function setText(el, value) {
+    if (el) el.textContent = value == null ? '' : String(value);
+  }
+
+  function clearChildren(el) {
+    if (!el) return;
+    while (el.firstChild) el.removeChild(el.firstChild);
+  }
+
+  function setAlert(el, type, message) {
+    if (!el) return;
+    el.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning', 'alert-info');
+    el.classList.add('alert-' + type);
+    setText(el, message);
+  }
+
+  function clearAlert(el) {
+    if (!el) return;
+    el.classList.add('d-none');
+    setText(el, '');
+  }
+
+  function appendNoPhoto(el, label) {
+    clearChildren(el);
+    var span = document.createElement('span');
+    span.className = 'text-muted';
+    span.textContent = label || 'No student photo uploaded';
+    el.appendChild(span);
+  }
+
+  function appendImage(el, src, alt, className) {
+    clearChildren(el);
+    var img = document.createElement('img');
+    if (className) img.className = className;
+    img.src = src;
+    img.alt = alt;
+    el.appendChild(img);
+  }
+
+  function renderPlaceholder(message) {
+    clearChildren(resultsBody);
+    var tr = document.createElement('tr');
+    var td = document.createElement('td');
+    td.colSpan = 9;
+    td.className = 'text-center text-muted';
+    td.textContent = message;
+    tr.appendChild(td);
+    resultsBody.appendChild(tr);
+  }
+
+  function renderRows(rows) {
+    var safeRows = Array.isArray(rows) ? rows : [];
+    resultCount.textContent = String(safeRows.length);
+    clearChildren(resultsBody);
+    if (!safeRows.length) {
+      renderPlaceholder('No results found.');
+      return;
+    }
+    safeRows.forEach(function (student) {
+      var tr = document.createElement('tr');
+      var values = [student.serial_no, student.registration_no, student.s_name, student.f_name, student.course_title, student.session, student.status];
+      var photoTd = document.createElement('td');
+      if (student.photo_url) appendImage(photoTd, student.photo_url, 'Student photo', 'photo-thumb');
+      else appendNoPhoto(photoTd, 'No photo');
+      tr.appendChild(photoTd);
+      values.forEach(function (value) {
+        var td = document.createElement('td');
+        td.textContent = value == null ? '' : String(value);
+        tr.appendChild(td);
+      });
+      var actionTd = document.createElement('td');
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn btn-info btn-sm manage-btn';
+      button.dataset.id = student.id;
+      button.textContent = 'Manage Photo';
+      actionTd.appendChild(button);
+      tr.appendChild(actionTd);
+      resultsBody.appendChild(tr);
+    });
+  }
+
+  async function parseJsonResponse(response, fallbackMessage) {
+    var payload = {};
+    try { payload = await response.json(); } catch (err) { payload = {}; }
+    if (!response.ok) throw new Error(payload.message || payload.errMsg || fallbackMessage);
+    return payload;
+  }
+
+  async function searchStudents(query, signal) {
+    var response = await fetch('/certificate/student-photos/search?q=' + encodeURIComponent(query), {
+      method: 'GET',
+      headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin',
+      signal: signal
+    });
+    return parseJsonResponse(response, 'Student search failed.');
+  }
+
+  async function loadStudent(studentId) {
+    var response = await fetch('/certificate/student-photos/' + encodeURIComponent(studentId), {
+      method: 'GET',
+      headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin'
+    });
+    return parseJsonResponse(response, 'Student record was not found.');
+  }
+
+  async function saveStudentPhoto(studentId, file) {
+    var formData = new FormData();
+    formData.append('photo', file);
+    var response = await fetch('/certificate/student-photos/' + encodeURIComponent(studentId) + '/photo', {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin',
+      body: formData
+    });
+    return parseJsonResponse(response, 'Photo update failed. The existing photo was not changed.');
+  }
+
+  async function deleteStudentPhoto(studentId) {
+    var response = await fetch('/certificate/student-photos/' + encodeURIComponent(studentId) + '/photo', {
+      method: 'DELETE',
+      headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin'
+    });
+    return parseJsonResponse(response, 'Server error.');
+  }
+
+  function renderStudentInfo(student) {
+    if (!studentInfo) return;
+    clearChildren(studentInfo);
+    [
+      ['serial_no', 'Serial Number'], ['registration_no', 'Registration Number'], ['s_name', 'Student Name'],
+      ['f_name', 'Father\'s Name'], ['m_name', 'Mother\'s Name'], ['course_title', 'Course / Trade'],
+      ['session', 'Session'], ['result', 'Result / Status']
+    ].forEach(function (item) {
+      var tr = document.createElement('tr');
+      var th = document.createElement('th');
+      var td = document.createElement('td');
+      th.textContent = item[1];
+      td.textContent = student[item[0]] == null ? '' : String(student[item[0]]);
+      tr.appendChild(th);
+      tr.appendChild(td);
+      studentInfo.appendChild(tr);
+    });
+  }
+
+  function clearSelectedFile() {
+    if (photoInput) photoInput.value = '';
+    if (newPreview) appendNoPhoto(newPreview, 'No new photo selected');
+  }
+
+  searchForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    if (isSearchLoading) return;
+    clearAlert(searchAlert);
+    var query = searchInput.value.trim();
+    if (!query) return setAlert(searchAlert, 'warning', 'Search term is required.');
+    if (query.length < 2) return setAlert(searchAlert, 'warning', 'Please enter at least 2 characters.');
+    isSearchLoading = true;
+    if (activeSearchController) activeSearchController.abort();
+    activeSearchController = new AbortController();
+    searchBtn.disabled = true;
+    searchBtn.textContent = 'Searching...';
+    renderPlaceholder('Loading...');
+    try {
+      var payload = await searchStudents(query, activeSearchController.signal);
+      var rows = payload.result || [];
+      renderRows(rows);
+      if (!rows.length) setAlert(searchAlert, 'info', payload.sucMsg || 'No students found.');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        renderRows([]);
+        setAlert(searchAlert, 'danger', err.message || 'Server error.');
+      }
+    } finally {
+      isSearchLoading = false;
+      searchBtn.disabled = false;
+      searchBtn.textContent = 'Search Student';
+    }
   });
-  $('#studentSearch').on('keypress', function(e){ if(e.which===13) $('#searchBtn').click(); });
-  $(document).on('click','.manage-btn', function(){
-    clearAlert('#manageAlert'); $.get('/certificate/student-photos/'+$(this).data('id')).done(function(res){
-      selectedStudent=res.result; $('#managePanel').removeClass('d-none');
-      $('#studentInfo').html(['serial_no:Serial Number','registration_no:Registration Number','s_name:Student Name','f_name:Father\'s Name','m_name:Mother\'s Name','course_title:Course / Trade','session:Session','result:Result / Status'].map(function(x){var p=x.split(':'); return '<tr><th>'+p[1]+'</th><td>'+esc(selectedStudent[p[0]])+'</td></tr>';}).join(''));
-      $('#currentPhoto').html(selectedStudent.photo_url ? '<img src="'+esc(selectedStudent.photo_url)+'" alt="Current student photo" />' : noPhoto());
-      $('#removePhoto').toggleClass('d-none', !selectedStudent.photo_url); $('#newPreview').html('<span class="text-muted">No new photo selected</span>'); $('#photoInput').val('');
-      $('html,body').animate({scrollTop:$('#managePanel').offset().top-80},250);
-    }).fail(function(){ alertBox('#searchAlert','danger','Student record was not found.'); });
+
+  resultsBody.addEventListener('click', async function (event) {
+    var button = event.target.closest('.manage-btn');
+    if (!button) return;
+    clearAlert(manageAlert);
+    button.disabled = true;
+    button.textContent = 'Loading...';
+    try {
+      var payload = await loadStudent(button.dataset.id);
+      selectedStudent = payload.result;
+      if (managePanel) managePanel.classList.remove('d-none');
+      renderStudentInfo(selectedStudent);
+      if (currentPhoto) {
+        if (selectedStudent.photo_url) appendImage(currentPhoto, selectedStudent.photo_url, 'Current student photo');
+        else appendNoPhoto(currentPhoto, 'No student photo uploaded');
+      }
+      if (removePhoto) removePhoto.classList.toggle('d-none', !selectedStudent.photo_url);
+      clearSelectedFile();
+      if (managePanel) managePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      setAlert(searchAlert, 'danger', err.message || 'Student record was not found.');
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Manage Photo';
+    }
   });
-  $('#photoInput').on('change', function(){ var f=this.files[0]; if(!f){$('#newPreview').html('<span class="text-muted">No new photo selected</span>');return;} if(f.size>2097152){alertBox('#manageAlert','danger','The selected image must not exceed 2 MB.'); this.value=''; return;} if(['image/jpeg','image/png','image/webp'].indexOf(f.type)<0){alertBox('#manageAlert','danger','Please select a valid image file.'); this.value=''; return;} var r=new FileReader(); r.onload=function(e){$('#newPreview').html('<img src="'+e.target.result+'" alt="New photo preview" />')}; r.readAsDataURL(f); });
-  $('#clearSelection,#cancelManage').on('click', function(){ $('#photoInput').val(''); $('#newPreview').html('<span class="text-muted">No new photo selected</span>'); if(this.id==='cancelManage') $('#managePanel').addClass('d-none'); });
-  $('#photoForm').on('submit', function(e){ e.preventDefault(); clearAlert('#manageAlert'); if(!selectedStudent){return;} if(!$('#photoInput')[0].files.length){ alertBox('#manageAlert','warning','Please select a valid image file.'); return; } var fd=new FormData(this); $('#savePhoto').prop('disabled',true).text('Saving...'); $.ajax({url:'/certificate/student-photos/'+selectedStudent.id+'/photo',method:'POST',data:fd,processData:false,contentType:false}).done(function(res){ alertBox('#manageAlert','success',res.message || res.sucMsg); selectedStudent.photo_url=res.result.photo_url; $('#currentPhoto').html('<img src="'+esc(selectedStudent.photo_url)+'" alt="Current student photo" />'); $('#removePhoto').removeClass('d-none'); $('#photoInput').val(''); $('#newPreview').html('<span class="text-muted">No new photo selected</span>'); }).fail(function(xhr){ alertBox('#manageAlert','danger',(xhr.responseJSON&&xhr.responseJSON.errMsg)||'Photo update failed. The existing photo was not changed.'); }).always(function(){ $('#savePhoto').prop('disabled',false).text('Save Photo'); }); });
-  $('#removePhoto').on('click', function(){ if(!selectedStudent || !confirm('Are you sure you want to remove this student’s photo?')) return; $.ajax({url:'/certificate/student-photos/'+selectedStudent.id+'/photo',method:'DELETE'}).done(function(res){ alertBox('#manageAlert','success',res.message || res.sucMsg); selectedStudent.photo_url=''; $('#currentPhoto').html(noPhoto()); $('#removePhoto').addClass('d-none'); }).fail(function(xhr){ alertBox('#manageAlert','danger',(xhr.responseJSON&&xhr.responseJSON.errMsg)||'Server error.'); }); });
-})();
+
+  if (photoInput) {
+    photoInput.addEventListener('change', function () {
+      clearAlert(manageAlert);
+      var file = photoInput.files && photoInput.files[0];
+      if (!file) return clearSelectedFile();
+      if (file.size > 2097152) { setAlert(manageAlert, 'danger', 'The selected image must not exceed 2 MB.'); return clearSelectedFile(); }
+      if (['image/jpeg', 'image/png', 'image/webp'].indexOf(file.type) < 0) { setAlert(manageAlert, 'danger', 'Please select a valid image file.'); return clearSelectedFile(); }
+      var reader = new FileReader();
+      reader.onload = function (event) { if (newPreview) appendImage(newPreview, event.target.result, 'New photo preview'); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if (clearSelection) clearSelection.addEventListener('click', clearSelectedFile);
+  if (cancelManage) cancelManage.addEventListener('click', function () { clearSelectedFile(); if (managePanel) managePanel.classList.add('d-none'); });
+
+  if (photoForm) {
+    photoForm.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      clearAlert(manageAlert);
+      if (!selectedStudent) return;
+      var file = photoInput && photoInput.files && photoInput.files[0];
+      if (!file) return setAlert(manageAlert, 'warning', 'Please select a valid image file.');
+      if (savePhoto) { savePhoto.disabled = true; savePhoto.textContent = 'Saving...'; }
+      try {
+        var payload = await saveStudentPhoto(selectedStudent.id, file);
+        setAlert(manageAlert, 'success', payload.message || payload.sucMsg || 'Student photo updated successfully.');
+        selectedStudent.photo_url = payload.result && payload.result.photo_url ? payload.result.photo_url : selectedStudent.photo_url;
+        if (currentPhoto && selectedStudent.photo_url) appendImage(currentPhoto, selectedStudent.photo_url, 'Current student photo');
+        if (removePhoto) removePhoto.classList.remove('d-none');
+        clearSelectedFile();
+      } catch (err) {
+        setAlert(manageAlert, 'danger', err.message || 'Photo update failed. The existing photo was not changed.');
+      } finally {
+        if (savePhoto) { savePhoto.disabled = false; savePhoto.textContent = 'Save Photo'; }
+      }
+    });
+  }
+
+  if (removePhoto) {
+    removePhoto.addEventListener('click', async function () {
+      if (!selectedStudent || !confirm('Are you sure you want to remove this student’s photo?')) return;
+      removePhoto.disabled = true;
+      removePhoto.textContent = 'Removing...';
+      try {
+        var payload = await deleteStudentPhoto(selectedStudent.id);
+        setAlert(manageAlert, 'success', payload.message || payload.sucMsg || 'Student photo removed successfully.');
+        selectedStudent.photo_url = '';
+        if (currentPhoto) appendNoPhoto(currentPhoto, 'No student photo uploaded');
+        removePhoto.classList.add('d-none');
+      } catch (err) {
+        setAlert(manageAlert, 'danger', err.message || 'Server error.');
+      } finally {
+        removePhoto.disabled = false;
+        removePhoto.textContent = 'Remove Photo';
+      }
+    });
+  }
+});
 </script>
 <%- include('system_layouts/s_foot') %>
